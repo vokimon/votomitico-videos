@@ -3,119 +3,22 @@ import numpy as np
 import random
 import tempfile
 import os
-from gtts import gTTS
-
-"""
-[
-aparece un interrogante con dos barras desiguales,
-desaparece el interrogante y una parte de la barra menor se va a la barra mayor.
-]
-¿Es útil concentrar el voto en el partido más grande?
-[aparece un cruz palpitante encima de todo]
-Pues NO es así.
-El llamado voto útil, que tenemos interiorizado, es una patraña.
-No solo es que dejas de votar a quien representa mejor, si es que lo hace.
-Es que se puede demostrar visualmente que no, puede ser hasta peor.
-[un monigote con los ojos mirando para arriba???]
-Que sí, que el sistema electoral beneficia a los grandes
-pero verás que eso no afecta al poder de cambio de tu voto.
-[
-Animación con varios bloques de votos.
-Un marcador en la parte superior indica,
-Disponibles y Repartidos, referiendo se a los escaños.
-La linea baja hasta que reparte hasta que reparte uno de más y echa para atras.
-A medida que baja se marcan los escaños conseguidos en las barras y en el marcador.
-]
-En otros vídeos explicamos de forma muy sencilla el reparto de D'Hondt,
-que se usa para repartir escaños en España.
-Resumido: ajusta un precio en votos por escaño para repartir escaños sin que sobren ni falten.
-[Desaparecen todas las barras menos una.
-Resaltar uno tras otro los bloques de votos de cada escaño.
-Una breve pausa justa para romper el ritmo.
-Resaltar el bloque de los restos.]
-Establecido el precio, los votos van, bien a obtener escaños o a los restos.
-[
-Animación de sucesivos trasvases entre dos candidaturas,
-pasandose bloques de un escaño mientras las otras y los restos de todas, quedan igual
-]
-Si muevo votos en bloques de un escaño,
-no hay ganancia conjunta de ambas candidaturas,
-solo muevo un escaño entre las dos, y el resto queda igual.
-Vale, puedo estar moviendo cientos de miles de votos.
-El grande se beneficia. El bloque de ambos partidos, no.
-[
-Entra otro interrogante.
-]
-Pero, y entre medias, puede haber ganancia?
-[
-Sale el interrogante. Y hacemos zoom en la parte de restos de una candidatura.
-Los restos oscilan entre 0 y P.
-]
-Pues eso depende de cuales eran los restos en la situacion inicial.
-[
-
-]
-
-
-
-los votos de una candidatura, o se usan para "comprar" un escaño o quedan para restos.
-Los restos de una candidatura quedarán en un punto indeterminado entre cero y el precio.
-Si movemos tantos votos como el precio vamos a otra situación en la que
-Pongamos que N personas que iban a votar a un partido deciden votar a otro mas grande para concentrar.
-Si N es un múltiplo del precio,
-que son escaños enteros que se van de una candidatura a la otra
-sin cambiar para nada el resultado de las otras candidaturas,
-ni el resultado conjunto de la grande y la pequeña.
-Y que pasa si no es múltiplo?
-Pues que lo que sobra
-
-pero que conjuntamente no cambian el resultado.
-Y despues esta la parte mas pequeña que el precio.
-
-
-
-"""
-
+from tts import TTS
+from manim_utils import overshoot
 
 config.frame_rate = 30
 config.pixel_width = 1080
 config.pixel_height = 1920
-config.frame_width = 9
-config.frame_height = 16
+config.frame_width = 18 # 9
+config.frame_height = 32     # 16
 config.background_color = WHITE  # Will be overridden with gradient
-
-def overshoot(t, s=1.70158):
-    t -= 1
-    return t * t * ((s + 1) * t + s) + 1
-
-class GoogleTTS:
-    def __init__(self, lang='es', slow=False):
-        self.lang = lang
-        self.slow = slow
-        self._temp_dir = None
-
-    def __enter__(self):
-        self._temp_dir = tempfile.TemporaryDirectory()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._temp_dir.cleanup()
-
-    def speak(self, text):
-        if self._temp_dir is None:
-            raise RuntimeError("Use this class as a context manager with 'with'.")
-        fd, path = tempfile.mkstemp(suffix=".mp3", dir=self._temp_dir.name)
-        os.close(fd)
-        tts = gTTS(text=text, lang=self.lang, slow=self.slow)
-        tts.save(path)
-        return path
 
 class VoteTransferWithQuestionMark(Scene):
     def construct(self):
         question_text = "¿Es útil concentrar el voto\nen el partido más grande?"
 
         # Generate speech audio file with TTS
-        with GoogleTTS(lang='es') as tts:
+        with TTS(lang='es') as tts:
             audio_path = tts.speak(question_text.replace('\n',' '))
 
             # Play audio in the scene
