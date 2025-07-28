@@ -4,14 +4,18 @@ import random
 import tempfile
 import os
 from tts import TTS
-from manim_utils import overshoot
+from manim_utils import (
+    overshoot,
+    add_background,
+    show_caption,
+)
 
 config.frame_rate = 30
 config.pixel_width = 1080
 config.pixel_height = 1920
 config.frame_width = 18 # 9
 config.frame_height = 32     # 16
-config.background_color = WHITE  # Will be overridden with gradient
+config.background_color = None
 
 class VoteTransferWithQuestionMark(Scene):
     def construct(self):
@@ -25,8 +29,8 @@ class VoteTransferWithQuestionMark(Scene):
             self.add_sound(audio_path)
 
             self.init_params()
-            self.add_gradient_background()
-            self.show_caption(question_text)
+            add_background(self)
+            show_caption(self, question_text)
             self.create_bars()
             self.animate_source_squash_stretch()
             self.animate_splinters()
@@ -55,17 +59,6 @@ class VoteTransferWithQuestionMark(Scene):
         impulse_fraction = 0.2
         self.release_time = self.parabola_time * (self.bar_width * impulse_fraction) / dx
         self.retract_time = 0.2
-
-    def add_gradient_background(self):
-        gradient = Rectangle(
-            width=config.frame_width,
-            height=config.frame_height,
-            fill_opacity=1,
-            stroke_width=0
-        )
-        gradient.set_fill(color=["#f85158", BLACK], opacity=1)
-        gradient.move_to(ORIGIN)
-        self.add(gradient)
 
     def create_bars(self):
         self.source_bar = Rectangle(
@@ -175,14 +168,3 @@ class VoteTransferWithQuestionMark(Scene):
             rate_func=overshoot
         )
         self.play(q.animate.scale(0.95), run_time=0.2, rate_func=smooth)
-
-    def show_caption(self, text):
-        shadow = Text(text, font_size=48, color=BLACK)
-        shadow.set_opacity(0.3)
-        shadow.shift(0.06 * DOWN + 0.06 * RIGHT)
-
-        caption = Text(text, font_size=48, color=WHITE)
-        caption_group = VGroup(shadow, caption)
-        caption_group.to_edge(DOWN, buff=0.6)
-
-        self.add(caption_group)
