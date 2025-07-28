@@ -6,14 +6,15 @@
 > Aparece un cruz palpitante encima de todo
 
 Pues NO es así.
-El llamado voto útil, que tenemos tan interiorizado, es una patraña.
-No solo es que dejas de votar a quien representa mejor, si es que lo hace.
-Es que se puede demostrar visualmente que no, puede ser hasta peor.
+El "voto útil", que tenemos tan interiorizado, es una patraña.
+No solo estarás votando a alguien que representa peor tus ideas,
+lo estarás haciendo sin obtener ningún tipo de ventaja estratégica.
+Y te lo puedo demostrar visualmente.
 
 > Un monigote con los ojos mirando para arriba???
 
-Que sí, que el sistema electoral beneficia a los grandes
-pero verás que eso no afecta al poder de cambio de tu voto.
+Que sí, que el sistema electoral beneficia a los grandes. Totalmente.
+Pero verás que eso no afecta en nada al poder de cambio de tu voto.
 
 > Animación con varios bloques de votos.
 > Un marcador en la parte superior indica,
@@ -21,17 +22,18 @@ pero verás que eso no afecta al poder de cambio de tu voto.
 > La linea baja hasta que reparte hasta que reparte uno de más y echa para atras.
 > A medida que baja se marcan los escaños conseguidos en las barras y en el marcador.
 
-En otros vídeos explicamos de forma muy sencilla el reparto de D'Hondt,
-que se usa para repartir escaños en España.
-Resumido: ajusta un precio en votos por escaño para repartir escaños sin que sobren ni falten.
+En otros vídeos explicamos una forma muy sencilla de entender el reparto de D'Hondt.
+El que se usa para repartir escaños en España.
+Resumido: ajusta un precio, en votos por escaño, para repartir escaños sin que sobren ni falten.
 
-> Desaparecen todas las barras menos una.
-> Resaltar uno tras otro los bloques de votos de cada escaño.
+> Desaparecen todas las barras menos una que tiene restos.
+> Resaltar rápidamente uno tras otro los bloques de votos de cada escaño.
 > Una breve pausa justa para romper el ritmo.
 > Resaltar el bloque de los restos.
 
 Establecido el precio, los votos van, bien a obtener escaños o a los restos.
 
+> Vuelven a aparecer el resto de barras.
 > Animación de sucesivos trasvases entre dos candidaturas,
 > pasandose bloques de un escaño mientras las otras y los restos de todas, quedan igual.
 > El trasvase se implementa abriendo un hueco en el emisor en su base, 
@@ -39,9 +41,9 @@ Establecido el precio, los votos van, bien a obtener escaños o a los restos.
 
 Si muevo votos en bloques de un escaño,
 el resultado conjunto sigue siendo el mismo.
-Un escaño cambia de manos y el resto de candidaturas seguirán igual.
+Un escaño cambia de manos y el resto de candidaturas seguirán igual con sus mismos restos.
 Puedo estar moviendo cientos de miles de votos
-y aunque el grande se beneficie, el bloque queda igual.
+y aunque el grande se beneficie, el resultado conjunto queda igual.
 
 > Entra un interrogante.
 
@@ -58,7 +60,7 @@ Depende de cuales eran los restos en la situación inicial.
 > Una carita con sonrisa neutra :-| en la esquina superior derecha.
 > Los restos comienzan a oscilar, cuando entran en la zona critica la cara sonrie y cae confetti.
 
-Un trasvase de N votos, le servirá al receptor para ganar un escaño, si le quedan N o menos para llegar al precio P.
+Un trasvase de N votos, le servirá al receptor para ganar un escaño, si le quedan menos para llegar al precio P.
 Si tenemos incertidumbre total de donde quedarán los restos,
 esto es una probabilidad de N sobre P.
 
@@ -80,20 +82,23 @@ Cuando solo pasa una y no la otra, habrá ganancia o pérdida neta.
 
 Observa como independientemente de N
 la zona de ganancia y la de perdida tienen el mismo tamaño.
-Tambien que las zonas sin cambio neto, cubren más de la mitad de la àrea.
+Tambien que las zonas sin cambio neto cubren más de la mitad de la àrea.
 
-> ???
+> Monigote???
 
 Eso quiere decir, que lo más probable es que un trasvase no cambie el resultado neto.
-Si lo hace, tiene la misma probabilidad de ser positivo y negativo,
+Si lo hace, tiene la misma probabilidad de ser positivo que negativo,
 y siempre limitado a un escaño por circunscripción.
 
 > ???
 
-¿Quiere decir que no podemos hacer voto estratégico?
-Pues concentrar en el mayoritario claramente no, pero,
-cuando sabemos algo más de donde quedan los restos podemos hacer cositas.
+Entonces ¿no podemos hacer voto estratégico?
+Pues concentrando en el mayoritario claramente no, pero,
+en casos especiales,
+cuando sabemos algo más de donde quedan los restos, podemos hacer cositas.
 Lo veremos en el próximo video.
+
+> Animación de entrada de la escena inicial
 
 Aun te parece cierto que...
 
