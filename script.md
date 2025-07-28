@@ -3,7 +3,7 @@
 
 ¿Es útil concentrar el voto en el partido más grande?
 
-> Aparece un cruz palpitante encima de todo
+> Aparece una cruz palpitante encima de todo.
 
 Pues NO es así.
 El "voto útil", que tenemos tan interiorizado, es una patraña.
@@ -11,75 +11,73 @@ Te lleva a votar a una opción que no es la tuya,
 a cambio de una supuesta ventaja estratégica,
 que, como vamos a demostrar, no existe.
 
-> Un monigote con los ojos mirando para arriba???
+> Un monigote con los ojos mirando hacia arriba.
 
-Que sí, que el sistema electoral beneficia a los grandes. Totalmente.
-Pero verás que, votar a uno o a otro, no cambia el poder de tu voto.
+Sí, el sistema electoral beneficia a los grandes. Totalmente.
+Pero verás que, votar a uno u otro, no cambia el poder de tu voto.
 
 > Animación con varios bloques de votos.
-> Un marcador en la parte superior indica,
-> Disponibles y Repartidos, referiendo se a los escaños.
-> La linea baja hasta que reparte hasta que reparte uno de más y echa para atras.
-> A medida que baja se marcan los escaños conseguidos en las barras y en el marcador.
+> Un marcador en la parte superior indica "Disponibles" y "Repartidos", refiriéndose a los escaños.
+> La línea baja repartiendo escaños hasta que reparte uno de más y echa para atrás.
+> A medida que baja, se marcan los escaños conseguidos en las barras y en el marcador.
 
-Esta forma tan visual de entender el reparto D'Hondt, la explicamos en otro video.
+Esta forma visual de entender el reparto D'Hondt la explicamos en otro video.
 Ajusta un precio, en votos por escaño, para repartir justo los escaños.
 
 > Desaparecen todas las barras menos una que tiene restos.
-> Resaltar rápidamente uno tras otro los bloques de votos de cada escaño.
-> Una breve pausa justa para romper el ritmo.
-> Resaltar el bloque de los restos.
+> Se resaltan rápidamente uno tras otro los bloques de votos de cada escaño.
+> Una breve pausa para romper el ritmo.
+> Se resalta el bloque de los restos.
 
-Los votos se usan para escaños o quedan de restos.
+Los votos se usan para escaños o quedan como restos.
 
 > Vuelven a aparecer el resto de barras.
 > Animación de sucesivos trasvases entre dos candidaturas,
-> pasandose bloques de un escaño mientras las otras y los restos de todas, quedan igual.
-> El trasvase se implementa abriendo un hueco en el emisor en su base, 
-> moviendo el primer escaño del emisor al receptor, y moviendo todos los bloques del emisor a la base.
+> pasando bloques de un escaño mientras las otras y los restos de todas quedan igual.
+> El trasvase se implementa abriendo un hueco en el emisor en su base,
+> moviendo el primer escaño del emisor al receptor, y desplazando todos los bloques del emisor a la base.
 
-Transferir justo los votos para un escaño,
-no altera los escaños conjuntos.
-Cientos de miles de votos transvasados
+Transferir justo los votos para un escaño no altera los escaños conjuntos.
+Cientos de miles de votos transvasados,
 sin ganancia para el conjunto, solo para el receptor.
 
 > Entra un interrogante.
 
-Pero, y entre escaño y escaño?
+Pero, ¿y entre escaño y escaño?
 
-> Sale el interrogante. Y hacemos zoom en la parte de restos de una candidatura.
+> Sale el interrogante. Zoom en los restos de una candidatura.
 > Los restos oscilan entre 0 y P.
 
-Pues depende de los restos de cada uno en la situación inicial.
+Pues depende de los restos iniciales de cada uno.
 
-> Se marca en rojo ahora la zona al inicio de P del mismo tamaño, N.
-> En la esquina carita neutra :-| se vuelve triste cuando la oscilacion entra en esa zona
+> Se marca en rojo la zona al inicio de P del mismo tamaño, N.
+> En la esquina, carita neutra :-| se vuelve triste cuando la oscilación entra en esa zona.
 
 Si el emisor tenía menos restos que los votos transferidos, perderá el escaño.
-Si no tenemos ni idea de dónde andarán los restos,
-probabilidad de N sobre P.
+Si no sabemos dónde están los restos,
+la probabilidad es N sobre P.
 
-> Se marca en verde transparente la zona critica del final de P.
-> N indicado encima de la zona critica. P indicado en todo escaño no conseguido.
-> Una carita con sonrisa neutra :-| en la esquina superior derecha.
-> Los restos comienzan a oscilar, cuando entran en la zona critica la cara sonrie y cae confetti.
+> Se marca en verde la zona crítica del final de P.
+> N indicado encima de la zona crítica, P indicado en todo escaño no conseguido.
+> Carita con sonrisa neutra :-| en la esquina superior derecha.
+> Los restos oscilan; cuando entran en la zona crítica, la cara sonríe y cae confeti.
 
-El receptor sumará un escaño si le faltaban N o menos restos para llegar a P.
-También N sobre P.
+El receptor ganará un escaño si le faltaban N o menos restos para llegar a P.
+También con probabilidad N sobre P.
 
 > Aparece un cuadro de probabilidad.
-> En horizontal los restos del receptor en vertical los del emisor.
-> Ambos con sus dos zonas criticas marcadas con un N arbitrario.
-> En el cuadro cuatro cuadrantes, se resalta cada uno sucesivamente.
+> En horizontal los restos del receptor, en vertical los del emisor.
+> Ambos con sus dos zonas críticas marcadas con un N arbitrario.
+> En el cuadro, cuatro cuadrantes resaltados sucesivamente.
 
-Solo cuando sucede una y no la otra, habrá cambio neto,
-porque si suceden las dos se compensan.
+Si solo se da una de las dos, habrá cambio neto,
+si ambas pasan, se compensarán.
 
-> El parametro N empieza a oscilar lentamente, arrastrando sus dependencias en el diagrama.
+> El parámetro N empieza a oscilar lentamente, arrastrando sus dependencias en el diagrama.
 
-Para diferentes tamaños de trasvase,
-la zona de ganancia y la de perdida tienen tamaño equivalente.
-Las zonas sin cambio neto cubren más de la mitad de la área.
+Para distintos tamaños de trasvase,
+la zona de ganancia y la de pérdida tienen tamaño equivalente.
+Las zonas sin cambio neto cubren más de la mitad del área.
 
 > Se muestra una lista con las conclusiones:
 > - Lo más probable: sin cambio
@@ -87,23 +85,21 @@ Las zonas sin cambio neto cubren más de la mitad de la área.
 > - Como máximo un escaño
 > - El tamaño del trasvase no importa
 > - La dirección tampoco
+> Debajo aparece:
+> "Concentrar en mayoritario"
 
-Dadas todas estas evidencias, cabe concluir que:
-No, concentrar el voto en el grande no tienen ninguna ventaja.
+Con estas evidencias...
 
-> A parece un texto: "Concentrar en mayoritario"
+> Aparece un sello rojo de "Patraña" encima del texto y todo tiembla un poco.
 
-Entonces ¿no hay voto estratégico?
+No, concentrar el voto en el grande no tiene ventaja.
 
-> Aparece un sello rojo de Patraña encima del texto anterior y todo tiembla un poco.
+> Aparece un cartel: "Próximo video: Oportunidades estratégicas"
 
-Concentrando en el mayoritario claramente no.
+Entonces, ¿no hay voto estratégico?
 
-> Aparece un cartel: Próximo video: Oportunidades estratégicas
-
-Si sabemos algo más de los restos, se pueden hacer cositas.
+Si sabemos más sobre los restos, se pueden hacer cositas.
 
 > Animación de entrada de la escena inicial
 
-Aun te parece cierto que...
-
+¿Aún te parece cierto que...
