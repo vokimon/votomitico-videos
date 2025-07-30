@@ -3,6 +3,7 @@ from manim_utils import add_background
 from itertools import pairwise
 from tts import TTS
 import math
+from scale import LinearScale
 
 config.frame_rate = 30
 config.pixel_width = 1080
@@ -53,36 +54,38 @@ class VisualDHondtScene(Scene):
         self.final_price = self.quotients[self.total_seats][0]
         self.scale = self.max_bar_width / self.initial_price
 
-    def seats_up_to(self, max_seats: int):
-        from collections import Counter
-        counts = Counter([party for price, party in self.quotients[:max_seats]])
-        cutoff_price = self.quotients[max_seats - 1][0] if max_seats else self.quotients[0][0] * 1.02
-        return [counts.get(party, 0) for party in range(len(self.parties))], cutoff_price
+        self.votes2x = LinearScale(
+            0, self.initial_price,
+            -self.max_bar_width/2, +self.max_bar_width/2,
+        )
 
     def setup_layout(self):
         self.bar_group = VGroup()
         self.seat_groups = []
 
         for i, (color, votes) in enumerate(self.parties):
+            x0 = self.votes2x(0)
+            x1 = self.votes2x(votes)
+            width = x1 - x0
+
             bar = Rectangle(
-                width=self.bar_scale(votes),
+                width=width,
                 height=self.bar_height,
                 fill_color=color,
                 fill_opacity=0.6,
                 stroke_width=0,
-            ).align_to(ORIGIN, LEFT).shift(DOWN * i * self.bar_spacing)
+            ).move_to([(x0 + x1) / 2, -i * self.bar_spacing, 0])
 
             self.bar_group.add(bar)
             seats = VGroup()
             self.seat_groups.append(seats)
-            self.add(seats)
 
-        self.bar_group.move_to(ORIGIN)
         self.add(self.bar_group)
+        self.add(SurroundingRectangle(self.bar_group, color=YELLOW))
 
     def setup_price_line(self):
         plot_height = (self.bar_height + self.bar_spacing) * len(self.parties) - self.bar_spacing
-        x_pos = self.bar_scale(self.initial_price)
+        x_pos = self.votes2x(self.initial_price)
 
         self.price_line = Line(
             start=[x_pos, +plot_height / 2, 0],
@@ -125,6 +128,12 @@ class VisualDHondtScene(Scene):
             stroke_color=WHITE,
             stroke_width=10,
         ).move_to([x, y, 0])
+
+    def seats_up_to(self, max_seats: int):
+        from collections import Counter
+        counts = Counter([party for price, party in self.quotients[:max_seats]])
+        cutoff_price = self.quotients[max_seats - 1][0] if max_seats else self.quotients[0][0] * 1.02
+        return [counts.get(party, 0) for party in range(len(self.parties))], cutoff_price
 
     def animate_prices(self):
         total_duration = 12.0
@@ -172,7 +181,7 @@ class VisualDHondtScene(Scene):
     def _animate_price_and_seats_move(self, current_deal, next_deal, next_price, duration):
         animations = [
             self.price_line.animate.set_x(
-                self.bar_group.get_corner(LEFT)[0] + self.bar_scale(next_price)
+                self.votes2x(next_price)
             )
         ]
 
