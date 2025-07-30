@@ -3,7 +3,8 @@ import numpy as np
 import random
 import tempfile
 import os
-from tts import TTS
+from manim_voiceover import VoiceoverScene
+from manim_voiceover.services.gtts import GTTSService
 from manim_utils import (
     overshoot,
     add_background,
@@ -17,20 +18,15 @@ config.frame_width = 18 # 9
 config.frame_height = 32     # 16
 config.background_color = None
 
-class VoteTransferWithQuestionMark(Scene):
+class IsVoteConcentrationUseful(VoiceoverScene):
     def construct(self):
-        question_text = "¿Es útil concentrar el voto\nen el partido más grande?"
+        self.set_speech_service(GTTSService(lang="es", global_speed=1.4))
 
-        # Generate speech audio file with TTS
-        with TTS(lang='es') as tts:
-            audio_path = tts.speak(question_text.replace('\n',' '))
-
-            # Play audio in the scene
-            self.add_sound(audio_path)
-
+        with self.voiceover(text=
+            "¿Es útil concentrar el voto en el partido más grande?"
+        ):
             self.init_params()
             add_background(self)
-            show_caption(self, question_text)
             self.create_bars()
             self.animate_source_squash_stretch()
             self.animate_splinters()
