@@ -5,6 +5,7 @@ import math
 from scale import LinearScale
 from manim_voiceover import VoiceoverScene
 from manim_voiceover.services.gtts import GTTSService
+import numpy as np
 
 config.frame_rate = 30
 config.pixel_width = 1080
@@ -18,44 +19,46 @@ class VisualDHondtScene(VoiceoverScene):
         self.set_speech_service(GTTSService(lang="es", global_speed=1.4))
 
         with self.voiceover(text=
-            "En otro video ya explicamos esta forma visual de entender el reparto D'Hondt.\n"
-            "Se reduce el precio en votos por escaño hasta que se reparten todos los escaños disponibles."
+            "Esta es una forma muy visual de entender el reparto D'Hondt.\n"
+            "Se reduce P, los votos que cuesta un escaño, hasta que se reparten todos los escaños disponibles."
         ):
             add_background(self)
             self.setup_data()
             self.setup_layout()
-            self.setup_price_line()
+            self.setup_price_lines()
             self.setup_counters()
             self.animate_prices()
             self.wait()
 
         with self.voiceover(text=
-            "Fijado el precio P los votos suman escaño o bien quedan como restos."
+            "Fijado el precio P, los votos suman escaño o bien quedan como restos."
         ):
             self.highlight_rests_and_fraction()
             self.wait(1)
 
         with self.voiceover(text=
-            "Si transferimos entre candidaturas afines tantos votos como el precio del escaño, "
+            "Si transferimos bloques de P votos entre candidaturas afines, "
             "aunque el receptor gane escaños, el resultado conjunto seguirá siendo el mismo. "
-            "Puede que hayamos convencido a cientos de miles para concentrar su voto sin obtener ganancia."
+            "Podríamos haber convencido a cientos de miles para concentrar su voto sin obtener ganancia como bloque."
         ):
-            self.animate_vote_transfer(2, 1, duration=0.4)
-            self.animate_vote_transfer(2, 1, duration=0.4)
-            self.animate_vote_transfer(1, 2, duration=0.4)
-            self.animate_vote_transfer(1, 2, duration=0.4)
-            self.animate_vote_transfer(1, 2, duration=0.4)
+            self.animate_vote_transfer(2, 1, duration=0.8)
+            self.animate_vote_transfer(2, 1, duration=0.8)
+            self.animate_vote_transfer(1, 2, duration=0.8)
+            self.animate_vote_transfer(1, 2, duration=0.8)
+            self.animate_vote_transfer(1, 2, duration=0.8)
+            self.animate_vote_transfer(1, 2, duration=0.8)
+            self.animate_vote_transfer(1, 2, duration=0.8)
+            self.animate_vote_transfer(2, 1, duration=0.3)
+            self.animate_vote_transfer(2, 1, duration=0.3)
+            self.animate_vote_transfer(2, 1, duration=0.3)
 
         with self.voiceover(text=
             "¿Y qué pasa con transferencias que no sean múltiplo de P? "
             "Dependerá de los restos que tengan emisor y receptor en la situación de partida. "
-            ""
+            "Intuitivamente vemos conveniente sumar los restos de las candidaturas. "
+            "Pero, como no sabemos que restos tendrán, podemos estar quitandole a uno los votos que necesita para el escaño, sin llegar a sumar restos suficientes en el otro. "
         ):
             pass
-
-    def say(self, tts, locution):
-        audio_path = tts.speak(locution.replace('\n',' '))
-        self.add_sound(audio_path)
 
     def setup_data(self):
         self.parties = [
@@ -80,7 +83,7 @@ class VisualDHondtScene(VoiceoverScene):
         max_votes = self.quotients[0][0]
         self.initial_price = max_votes * 1.02
         self.final_price = self.quotients[self.total_seats-1][0]
-        max_votes_domain = self.quotients[1][0] + self.quotients[2][0] # second and third added
+        max_votes_domain = self.quotients[1][0] + self.quotients[2][0]
 
         useful_width = config.frame_width - 2*self.xmargin_pct*config.frame_width
         self.votes2x = LinearScale(
@@ -110,7 +113,6 @@ class VisualDHondtScene(VoiceoverScene):
             self.seat_groups.append(seats)
 
         self.add(self.bar_group)
-        #self.add(SurroundingRectangle(self.bar_group, color=YELLOW))
 
     def setup_price_lines(self):
         plot_height = (self.bar_height + self.bar_spacing) * len(self.parties) - self.bar_spacing
@@ -118,8 +120,10 @@ class VisualDHondtScene(VoiceoverScene):
         y1 = self.bar_group.get_bottom()[1] - 2 * self.bar_height
 
         self.price_lines = []
+
         for i in range(1, self.total_seats + 1):
             x = self.votes2x(self.initial_price * i)
+
             line = Line(
                 start=[x, y0, 0],
                 end=[x, y1, 0],
@@ -127,27 +131,16 @@ class VisualDHondtScene(VoiceoverScene):
                 stroke_width=4 if i == 1 else 2,
                 stroke_opacity=1.0 if i == 1 else 0.25,
             )
-            self.price_lines.append((i, line))
-            self.add(line)
 
-        # Guarda la línea principal para animaciones posteriores
-        self.price_line = self.price_lines[0][1]
+            label_text = f"{i}P" if i > 1 else "P"
+            label = Text(label_text, font_size=36, color=WHITE)
+            label.next_to(line, UP, buff=0.2)
 
+            line_and_label = VGroup(line, label)
+            self.price_lines.append((i, line_and_label))
+            self.add(line_and_label)
 
-    def setup_price_line(self):
-        return self.setup_price_lines()
-        overshoot = 2 * self.bar_height
-        bar_top = self.bar_group.get_top()[1] + overshoot
-        bar_bottom = self.bar_group.get_bottom()[1] - overshoot
-        x_pos = self.votes2x(self.initial_price)
-
-        self.price_line = Line(
-            start=[x_pos, bar_top, 0],
-            end=[x_pos, bar_bottom, 0],
-            color=RED,
-            stroke_width=4,
-        )
-        self.add(self.price_line)
+        self.price_line = self.price_lines[0][1][0]  # only the Line, for legacy code
 
     def setup_counters(self):
         self.available_label = Text("Disponibles: ", font_size=70, color=WHITE).to_corner(UL).shift(RIGHT + DOWN * 8)
@@ -167,16 +160,16 @@ class VisualDHondtScene(VoiceoverScene):
             self.distributed_count.set_color(GREEN)
 
     def get_seat_rectangle(self, party_index, seat_index, price, is_new=False):
-        x = self.votes2x(seat_index * price + price / 2)  # posición (con offset)
+        x = self.votes2x(seat_index * price + price / 2)
         y = self.bar_group[party_index].get_y()
 
         new_color = WHITE
         party_color = self.parties[party_index][0]
-        width = self.votes2x.scale(price)  # ancho sin offset
+        width = self.votes2x.scale(price)
 
         return Rectangle(
             width=width,
-            fill_color = new_color if is_new else party_color,
+            fill_color=new_color if is_new else party_color,
             height=self.bar_height,
             fill_opacity=1.0,
             stroke_color=WHITE,
@@ -210,24 +203,11 @@ class VisualDHondtScene(VoiceoverScene):
             next_step = seat_steps[step_idx + 1]
             next_deal, next_price = self.seats_up_to(next_step)
 
-            self._animate_price_and_seats_move(
-                current_deal=current_deal,
-                next_deal=next_deal,
-                next_price=next_price,
-                duration=move_durations[step_idx],
-            )
-            self._add_new_seats_flash(
-                current_deal=current_deal,
-                next_deal=next_deal,
-                price=next_price,
-            )
+            self._animate_price_and_seats_move(current_deal, next_deal, next_price, move_durations[step_idx])
+            self._add_new_seats_flash(current_deal, next_deal, next_price)
+
             self.update_counters(value=next_step)
-            self._transform_new_seats_to_normal(
-                current_deal=current_deal,
-                next_deal=next_deal,
-                price=next_price,
-                duration=flash_duration,
-            )
+            self._transform_new_seats_to_normal(current_deal, next_deal, next_price, flash_duration)
 
             current_deal = next_deal
             current_price = next_price
@@ -235,9 +215,9 @@ class VisualDHondtScene(VoiceoverScene):
     def _animate_price_and_seats_move(self, current_deal, next_deal, next_price, duration):
         animations = []
 
-        for multiplier, line in self.price_lines:
+        for multiplier, group in self.price_lines:
             target_x = self.votes2x(next_price * multiplier)
-            animations.append(line.animate.set_x(target_x))
+            animations.append(group.animate.set_x(target_x))
 
         for party_idx in range(len(self.parties)):
             seats = self.seat_groups[party_idx]
@@ -299,25 +279,19 @@ class VisualDHondtScene(VoiceoverScene):
         votes_used = seats_won * price
         rests = votes - votes_used
 
-        # Animaciones simples: escala a 1.2 y luego a 1.0 para cada asiento
-        bounce_anims = [
-            Indicate(seat)
-            for seat in seats
-        ]
+        bounce_anims = [Indicate(seat) for seat in seats]
 
-        # Reproducir la escala hacia arriba en cascada
         self.play(
             LaggedStart(*bounce_anims, lag_ratio=0.5, run_time=seats_won * 0.3)
         )
 
         self.wait(0.5)
 
-        # Añadir restos
         bar = self.bar_group[party_index]
         x_start = self.votes2x(votes_used)
         x_end = self.votes2x(votes)
 
-        rest_width = self.votes2x.scale(votes-votes_used)
+        rest_width = self.votes2x.scale(votes - votes_used)
         rest_rect = Rectangle(
             width=rest_width,
             height=self.bar_height,
@@ -329,7 +303,6 @@ class VisualDHondtScene(VoiceoverScene):
 
         self.add(rest_rect)
 
-        # Zoom en restos
         self.play(
             Indicate(rest_rect, run_time=0.4)
         )
@@ -351,9 +324,8 @@ class VisualDHondtScene(VoiceoverScene):
         self.play(
             receiver_bar.animate.shift(RIGHT * seat_width),
             *[seat.animate.shift(RIGHT * seat_width) for seat in receiver_seats],
-            run_time=1,
+            run_time=duration,
             rate_func=smooth,
-            duration=duration,
         )
 
     def shift_emitter_left(self, iparty, duration):
@@ -364,9 +336,8 @@ class VisualDHondtScene(VoiceoverScene):
         self.play(
             emitter_bar.animate.shift(LEFT * seat_width),
             *[seat.animate.shift(LEFT * seat_width) for seat in emitter_seats],
-            run_time=1,
+            run_time=duration,
             rate_func=smooth,
-            duration=duration,
         )
 
     def shrink_emitter_bar_left(self, emitter_idx):
@@ -389,11 +360,12 @@ class VisualDHondtScene(VoiceoverScene):
         target_y = self.bar_group[receiver_idx].get_y()
         target_pos = np.array([current_pos[0], target_y, 0])
 
+        path = ArcBetweenPoints(current_pos, target_pos, angle=PI / 2)
+
         self.play(
-            seat_to_fly.animate.move_to(target_pos),
-            run_time=1.0,
+            MoveAlongPath(seat_to_fly, path),
+            run_time=duration,
             rate_func=smooth,
-            duration=duration,
         )
 
         receiver_color = self.parties[receiver_idx][0]
@@ -401,4 +373,3 @@ class VisualDHondtScene(VoiceoverScene):
 
         self.seat_groups[receiver_idx].submobjects.insert(0, seat_to_fly)
         self.seat_groups[emitter_idx].remove(seat_to_fly)
-
