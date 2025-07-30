@@ -28,18 +28,17 @@ class VisualDHondtScene(VoiceoverScene):
             self.setup_price_lines()
             self.setup_counters()
             self.animate_prices()
-            self.wait()
 
         with self.voiceover(text=
             "Fijado el precio P, los votos suman escaño o bien quedan como restos."
         ):
-            self.highlight_rests_and_fraction()
             self.wait(1)
+            self.highlight_rests_and_fraction()
 
         with self.voiceover(text=
             "Si transferimos bloques de P votos entre candidaturas afines, "
-            "aunque el receptor gane escaños, el resultado conjunto seguirá siendo el mismo. "
-            "Podríamos haber convencido a cientos de miles para concentrar su voto sin obtener ganancia como bloque."
+            "el receptor gana escaños, pero combinados se quedan igual. "
+            "Cientos de miles concentrando su voto sin obtener ganancia como bloque."
         ):
             self.animate_vote_transfer(2, 1, duration=0.8)
             self.animate_vote_transfer(2, 1, duration=0.8)
@@ -54,9 +53,8 @@ class VisualDHondtScene(VoiceoverScene):
 
         with self.voiceover(text=
             "¿Y qué pasa con transferencias que no sean múltiplo de P? "
-            "Dependerá de los restos que tengan emisor y receptor en la situación de partida. "
-            "Intuitivamente vemos conveniente sumar los restos de las candidaturas. "
-            "Pero, como no sabemos que restos tendrán, podemos estar quitandole a uno los votos que necesita para el escaño, sin llegar a sumar restos suficientes en el otro. "
+            "Intuímos que se podrían combinar restos para ganar un escaño. "
+            "Pero no sabemos que restos tendrán y podríamos hacer el camino inverso y perderlo. "
         ):
             pass
 
@@ -64,8 +62,8 @@ class VisualDHondtScene(VoiceoverScene):
         self.parties = [
             (RED, 13712),
             (BLUE, 9843),
-            (GREEN, 7254),
-            (ORANGE, 6100),
+            (ORANGE, 7254),
+            (GREEN, 6100),
         ]
         self.total_seats = 11
         self.bar_height = 1.0
