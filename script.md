@@ -28,7 +28,7 @@ Se ajusta el precio, en votos por escaño, hasta que se reparten los escaños di
 > Resaltamos rápidamente los bloques de votos que forman escaños.
 > Luego, los votos que quedan de restos.
 
-A ese precio, votos se usan para escaños o quedan como restos.
+Fijado el precio los votos suman escaño o bien quedan como restos.
 
 > Vuelven a aparecer el resto de barras.
 > Animación de sucesivos trasvases entre dos candidaturas,
