@@ -40,16 +40,12 @@ class VisualDHondtScene(VoiceoverScene):
             "el receptor gana escaños, pero combinados se quedan igual. "
             "Cientos de miles concentrando su voto sin obtener ganancia como bloque."
         ):
-            self.animate_vote_transfer(2, 1, duration=0.8)
-            self.animate_vote_transfer(2, 1, duration=0.8)
-            self.animate_vote_transfer(1, 2, duration=0.8)
-            self.animate_vote_transfer(1, 2, duration=0.8)
-            self.animate_vote_transfer(1, 2, duration=0.8)
-            self.animate_vote_transfer(1, 2, duration=0.8)
-            self.animate_vote_transfer(1, 2, duration=0.8)
-            self.animate_vote_transfer(2, 1, duration=0.3)
-            self.animate_vote_transfer(2, 1, duration=0.3)
-            self.animate_vote_transfer(2, 1, duration=0.3)
+            for _ in range(2):
+                self.animate_vote_transfer(2, 1, duration=0.8)
+            for _ in range(5):
+                self.animate_vote_transfer(1, 2, duration=0.8)
+            for _ in range(3):
+                self.animate_vote_transfer(2, 1, duration=0.3)
 
         with self.voiceover(text=
             "¿Y qué pasa con transferencias que no sean múltiplo de P? "
