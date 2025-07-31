@@ -15,12 +15,15 @@ config.frame_height = 32
 config.background_color = None
 
 class VisualDHondtScene(VoiceoverScene):
+    def voiceover(self, **kwds):
+        return super().voiceover(**dict(kwds, max_subcaption_len=30))
+
     def construct(self):
         self.set_speech_service(GTTSService(lang="es", global_speed=1.4))
 
         with self.voiceover(text=
             "Esta es una forma muy visual de entender el reparto D'Hondt.\n"
-            "Se reduce P, los votos que cuesta un escaño, hasta que se reparten todos los escaños disponibles."
+            "Se reducen los votos que cuesta un escaño hasta que quedan repartidos todos los escaños disponibles."
         ):
             add_background(self)
             self.setup_data()
@@ -30,29 +33,40 @@ class VisualDHondtScene(VoiceoverScene):
             self.animate_prices()
 
         with self.voiceover(text=
-            "Fijado el precio P, los votos suman escaño o bien quedan como restos."
+            "Fijado este precio P, los votos suman escaño o bien quedan como restos."
         ):
             self.wait(1)
             self.highlight_rests_and_fraction()
 
         with self.voiceover(text=
             "Si transferimos bloques de P votos entre candidaturas afines, "
-            "el receptor gana escaños, pero combinados se quedan igual. "
-            "Cientos de miles concentrando su voto sin obtener ganancia como bloque."
+            "el receptor gana escaños, pero entre los dos tienen los mismos. "
+            "Concentramos cientos de miles de votos sin beneficio conjunto. "
         ):
+            self.wait()
             for _ in range(2):
                 self.animate_vote_transfer(2, 1, duration=0.8)
             for _ in range(5):
                 self.animate_vote_transfer(1, 2, duration=0.8)
             for _ in range(3):
-                self.animate_vote_transfer(2, 1, duration=0.3)
+                self.animate_vote_transfer(2, 1, duration=0.5)
 
         with self.voiceover(text=
-            "¿Y qué pasa con transferencias que no sean múltiplo de P? "
-            "Intuímos que se podrían combinar restos para ganar un escaño. "
-            "Pero no sabemos que restos tendrán y podríamos hacer el camino inverso y perderlo. "
+            "En trasvases menores que P depende de los restos de ambas formaciones... "
+        ):
+            self.zoom_on_rests(emitter_idx=2, receiver_idx=1)
+
+        with self.voiceover(text=
+            "...cuyo valor entre 0 y P desconocemos antes de la votación. "
+            "Si trasvasamos N el emisor ganará un escaño cuando le queden menos para llegar a P. "
+            "Pero el emisor lo perdera si no tiene tantos restos. "
+            "Las áreas de pérdida y de ganancia neta son iguales aunque cambie N. "
+            "Hay oportunidad de hacer voto estratégico cuando podemos predecir los restos. "
+            "Pero no, el criterio no es votar al más grande. "
+            "Aún piensas que..."
         ):
             pass
+
 
     def setup_data(self):
         self.parties = [
@@ -177,10 +191,10 @@ class VisualDHondtScene(VoiceoverScene):
         return [counts.get(party, 0) for party in range(len(self.parties))], cutoff_price
 
     def animate_prices(self):
-        total_duration = 10.0
-        move_fraction = 0.20
-
+        total_duration = 8.0
+        move_fraction = 0.30
         seat_steps = list(range(self.total_seats + 1))
+
         price_sequence = [self.seats_up_to(step)[1] for step in seat_steps]
         price_deltas = [abs(a - b) for a, b in pairwise(price_sequence)]
 
@@ -188,7 +202,10 @@ class VisualDHondtScene(VoiceoverScene):
         move_time = total_duration * move_fraction
         flash_time = total_duration * (1 - move_fraction)
 
-        move_durations = [(delta / total_delta) * move_time if total_delta else 0 for delta in price_deltas]
+        move_durations = [
+            (delta / total_delta) * move_time if total_delta else 0
+            for delta in price_deltas
+        ]
         flash_duration = flash_time / len(price_deltas)
 
         current_deal, current_price = self.seats_up_to(0)
@@ -280,26 +297,30 @@ class VisualDHondtScene(VoiceoverScene):
         )
 
         self.wait(0.5)
+        for party_index, (color, votes) in enumerate(self.parties):
 
-        bar = self.bar_group[party_index]
-        x_start = self.votes2x(votes_used)
-        x_end = self.votes2x(votes)
+            rests = votes % self.final_price
 
-        rest_width = self.votes2x.scale(votes - votes_used)
-        rest_rect = Rectangle(
-            width=rest_width,
-            height=self.bar_height,
-            fill_color=color,
-            fill_opacity=0.7,
-            stroke_color=color,
-            stroke_width=4,
-        ).align_to(bar, RIGHT)
+            bar = self.bar_group[party_index]
+            x_start = self.votes2x(votes_used)
+            x_end = self.votes2x(votes)
 
-        self.add(rest_rect)
+            rest_width = self.votes2x.scale(rests)
+            rest_rect = Rectangle(
+                width=rest_width,
+                height=self.bar_height,
+                fill_color=color,
+                fill_opacity=0.7,
+                stroke_color=None,
+                stroke_width=0,
+            ).move_to(bar, RIGHT).set_y(bar.get_y())
 
-        self.play(
-            Indicate(rest_rect, run_time=0.4)
-        )
+            self.add(rest_rect)
+
+            self.play(
+                Indicate(rest_rect, run_time=0.4)
+            )
+            self.remove(rest_rect)
 
         self.wait(1.0)
 
@@ -367,3 +388,113 @@ class VisualDHondtScene(VoiceoverScene):
 
         self.seat_groups[receiver_idx].submobjects.insert(0, seat_to_fly)
         self.seat_groups[emitter_idx].remove(seat_to_fly)
+
+
+        receiver_target_pos = RIGHT * (config.frame_width / 2 - 2.5)  # zona derecha segura
+
+    def zoom_on_rests(self, emitter_idx=2, receiver_idx=1):
+        # Crear overlays de restos
+
+        def create_rest_overlay(party_index):
+            votes = self.parties[party_index][1]
+            color = self.parties[party_index][0]
+            seats_won = len(self.seat_groups[party_index])
+            votes_used = seats_won * self.final_price
+            rest_votes = votes - votes_used
+
+            if rest_votes <= 0:
+                return None
+
+            bar = self.bar_group[party_index]
+            bar_y = bar.get_center()[1]
+
+            rest_width = self.votes2x.scale(rest_votes)
+            height = self.bar_height
+
+            # RECTÁNGULO DEL RESTO
+            rect = Rectangle(
+                width=rest_width,
+                height=height,
+                fill_color=color,
+                fill_opacity=1.0,
+                stroke_color=WHITE,
+                stroke_width=2,
+            )
+            rect.align_to(bar, RIGHT)
+            rect.move_to([rect.get_center()[0], bar_y, 0])
+
+            # LÍNEA DE PRECIO SUPERADO (último escaño ganado)
+            guide_line = Line(
+                start=rect.get_left() + UP * (height / 2 + 0.15),
+                end=rect.get_left() + DOWN * (height / 2 + 0.15),
+                stroke_color=WHITE,
+                stroke_width=4,
+            )
+
+            # LÍNEA DE PRECIO NO SUPERADO (siguiente escaño posible)
+            next_price_votes = self.final_price * (seats_won + 1)
+            next_price_x = self.votes2x(next_price_votes)
+            next_price_line = Line(
+                start=[next_price_x, bar_y + height / 2 + 0.15, 0],
+                end=[next_price_x, bar_y - height / 2 - 0.15, 0],
+                stroke_color=WHITE,
+                stroke_width=4,
+                stroke_opacity=0.25,
+            )
+
+            # GRUPO DE OVERLAY
+            overlay = VGroup(rect, guide_line, next_price_line)
+
+            # 🔧 AJUSTE de posición para que el borde izquierdo esté en el punto correcto
+            left_edge = rect.get_left()
+            for mobj in overlay:
+                mobj.shift(-left_edge)
+
+            # Ahora colocamos el grupo entero con su borde izquierdo en la posición correcta
+            overlay.move_to([left_edge[0], bar_y, 0], aligned_edge=LEFT)
+
+            return overlay
+
+
+        emitter_overlay = create_rest_overlay(emitter_idx)
+        receiver_overlay = create_rest_overlay(receiver_idx)
+
+        if emitter_overlay is None or receiver_overlay is None:
+            return  # No hay restos para hacer zoom
+
+        # Añadir overlays
+        self.add(emitter_overlay, receiver_overlay)
+
+        # Fade parcial de los demás elementos menos el fondo
+        fade_group = VGroup(
+            *self.bar_group,
+            *[seat for group in self.seat_groups for seat in group],
+            *[line_and_label for _, line_and_label in self.price_lines],
+            self.available_label,
+            self.available_count,
+            self.distributed_label,
+            self.distributed_count,
+        )
+
+        self.play(
+            fade_group.animate.set_opacity(0.2),
+            run_time=1.5
+        )
+        self.wait(0.5)
+
+        # Posiciones destino en la zona segura
+        emitter_target_pos = DOWN * (config.frame_height / 2 - 2.0)
+        receiver_target_pos = RIGHT * (config.frame_width / 2 - 2.0)
+
+        # Animar zoom, traslado y rotación
+        self.play(
+            emitter_overlay.animate.scale(3.5).move_to(emitter_target_pos),
+            receiver_overlay.animate.scale(3.5).rotate(PI / 2).move_to(receiver_target_pos),
+            run_time=2.5
+        )
+        self.wait(0.5)
+
+    from dhont_to_rest_graph import zoom_on_rests
+
+
+
