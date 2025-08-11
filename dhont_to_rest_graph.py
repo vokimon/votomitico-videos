@@ -64,7 +64,7 @@ def zoom_on_rests(self, emitter_idx=2, receiver_idx=1):
         self.distributed_count,
     )
 
-    self.play(fade_group.animate.set_opacity(0.2), run_time=1.5)
+    self.play(fade_group.animate.set_opacity(0.0), run_time=1.5)
 
     # Escalado objetivo
     overlay_width = emitter_overlay.width

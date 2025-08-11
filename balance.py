@@ -12,19 +12,36 @@ config.background_color = None
 
 class ProceduralBalanceScene(Scene):
     def construct(self):
-        # === Scene Parameters ===
-        support_height = 3
-        arm_length = 6
-        arm_thickness = 0.25
-        support_width = 0.3
-        plate_height = 0.6
-        plate_width_top = 1.6
-        plate_width_bottom = 1.0
-        plate_offset = 1.5  # vertical offset from arm tip
+        # === Base scale factor (smallest dimension) ===
+        base_scale = min(config.frame_width, config.frame_height)
+
+        # === Scene Parameters as ratios of base_scale ===
+        support_height = 0.1 * base_scale       # height of vertical support
+        arm_length = 0.33 * base_scale          # length of arm
+        arm_thickness = 0.014 * base_scale      # thickness of arm rectangle
+        support_width = 0.015 * base_scale      # width of vertical support
+        plate_height = 0.033 * base_scale       # height of trapezoid plate
+        plate_width_top = 0.088 * base_scale    # top width of trapezoid plate
+        plate_width_bottom = 0.055 * base_scale # bottom width of trapezoid plate
+        plate_offset = 0.083 * base_scale       # vertical offset from arm tip to plate top
+
+        # Triangle base size (width and height)
+        base_triangle_height = 0.06 * base_scale
+        base_triangle_width = 0.14 * base_scale
 
         # === Tilt angles ===
         left_tilt_angle = 0.3    # radians, arm tilted left (blue weight)
         right_tilt_angle = -0.4  # radians, arm tilted right (red + blue weights)
+
+        # === Create Base Triangle under support ===
+        base_triangle = Polygon(
+            LEFT * base_triangle_width / 2 + DOWN * base_triangle_height,
+            RIGHT * base_triangle_width / 2 + DOWN * base_triangle_height,
+            ORIGIN,
+            color=GRAY,
+            fill_color=GRAY,
+            fill_opacity=1
+        ).shift(DOWN * (support_height + base_triangle_height))
 
         # === Create Support and Pivot ===
         support = Rectangle(
@@ -33,10 +50,10 @@ class ProceduralBalanceScene(Scene):
             color=GRAY,
             fill_color=GRAY,
             fill_opacity=1
-        ).move_to(DOWN * 6 + UP * support_height / 2)
+        ).next_to(base_triangle.get_top(), UP, buff=0)
 
         pivot_point = support.get_top()
-        pivot = Dot(point=pivot_point, radius=0.1, color=ORANGE)
+        pivot = Dot(point=pivot_point, radius=0.005 * base_scale, color=ORANGE)
 
         # === Create Arm ===
         arm = Rectangle(
@@ -93,21 +110,21 @@ class ProceduralBalanceScene(Scene):
         ))
 
         # === Group and Add to Scene ===
-        static_parts = VGroup(support, pivot, left_chain, right_chain, left_plate, right_plate)
+        static_parts = VGroup(base_triangle, support, pivot, left_chain, right_chain, left_plate, right_plate)
         self.add(static_parts, arm)
 
         # === Weights (Circles) That Follow Plates ===
-        weight_left = always_redraw(lambda: Circle(radius=0.25, fill_opacity=1, color=BLUE)
-                                    .move_to(left_plate.get_center() + UP * 0.4))
+        weight_left = always_redraw(lambda: Circle(radius=0.014 * base_scale, fill_opacity=1, color=BLUE)
+                                    .move_to(left_plate.get_center() + UP * 0.022 * base_scale))
 
-        # 🔴 Larger red weight to represent "voto útil"
-        weight_right = always_redraw(lambda: Circle(radius=0.4, fill_opacity=1, color=RED)
-                                     .move_to(right_plate.get_center() + UP * 0.4))
+        weight_right = always_redraw(lambda: Circle(radius=0.022 * base_scale, fill_opacity=1, color=RED)
+                                     .move_to(right_plate.get_center() + UP * 0.022 * base_scale))
 
         # === Function to rotate arm to a target angle smoothly ===
         def rotate_arm_to(target_angle, duration):
             nonlocal arm_angle
             start_angle = arm_angle
+
             def updater(mob, dt):
                 nonlocal arm_angle
                 t = min(1, (self.time - start_time) / duration)
@@ -115,6 +132,7 @@ class ProceduralBalanceScene(Scene):
                 diff = new_angle - arm_angle
                 mob.rotate(diff, about_point=pivot_point)
                 arm_angle = new_angle
+
             start_time = self.time
             arm.add_updater(updater)
             self.wait(duration)
