@@ -1,96 +1,83 @@
 from manim import *
 
+def _create_rest_overlay(self, party_index):
+    votes = self.parties[party_index][1]
+    color = self.parties[party_index][0]
+    seats_won = len(self.seat_groups[party_index])
+    votes_used = seats_won * self.final_price
+    rest_votes = votes - votes_used
+
+    bar = self.bar_group[party_index]
+    bar_y = bar.get_center()[1]
+
+    height = self.bar_height
+    price = self.final_price
+
+    # Posición centro del bloque de fondo negro (entre escaño s y s+1)
+    center_vote_value = price * (seats_won + 0.5)
+    center_x = self.votes2x(center_vote_value)
+
+    background_color = "#622"
+    # Fondo negro de ancho P
+    p_width = self.votes2x.scale(price)
+    background_bar = Rectangle(
+        width=p_width,
+        height=height+.3,
+        fill_color=background_color,
+        fill_opacity=1.0,
+        stroke_color=background_color,
+        stroke_width=5,
+    ).move_to([center_x, bar_y, 0])
+
+    # Resto encima, alineado a la izquierda del bloque
+    rest_width = self.votes2x.scale(rest_votes)
+    rect = Rectangle(
+        width=rest_width,
+        height=height,
+        fill_color=color,
+        fill_opacity=1.0,
+        stroke_color=None,
+        stroke_width=0,
+    ).align_to(background_bar, LEFT).set_y(bar_y)
+
+    overlay = VGroup(background_bar, rect)
+    return overlay
+
+
 def zoom_on_rests(self, emitter_idx=2, receiver_idx=1):
     axis_percent = 0.08
     xmargin_pct = self.xmargin_pct
-    xmargin = xmargin_pct * config.frame_width
     safe_width = config.frame_width * (1 - 2 * xmargin_pct)
 
     canvas_side = safe_width
     self.add(Rectangle(width=canvas_side, height=canvas_side).move_to([0, 0, 0]))
 
-    def create_rest_overlay(party_index):
-        votes = self.parties[party_index][1]
-        color = self.parties[party_index][0]
-        seats_won = len(self.seat_groups[party_index])
-        votes_used = seats_won * self.final_price
-        rest_votes = votes - votes_used
-
-        bar = self.bar_group[party_index]
-        bar_y = bar.get_center()[1]
-
-        rest_width = self.votes2x.scale(rest_votes)
-        height = self.bar_height
-
-        rect = Rectangle(
-            width=rest_width,
-            height=height,
-            fill_color=color,
-            fill_opacity=1.0,
-            stroke_color=WHITE,
-            stroke_width=2,
-        )
-        rect.align_to(bar, RIGHT)
-        rect.move_to([rect.get_center()[0], bar_y, 0])
-
-        guide_line = Line(
-            start=rect.get_left() + UP * (height / 2 + 0.15),
-            end=rect.get_left() + DOWN * (height / 2 + 0.15),
-            stroke_color=WHITE,
-            stroke_width=4,
-        )
-
-        next_price_votes = self.final_price * (seats_won + 1)
-        next_price_x = self.votes2x(next_price_votes)
-        next_price_line = Line(
-            start=[next_price_x, bar_y + height / 2 + 0.15, 0],
-            end=[next_price_x, bar_y - height / 2 - 0.15, 0],
-            stroke_color=WHITE,
-            stroke_width=4,
-            stroke_opacity=0.25,
-        )
-
-        overlay = VGroup(rect, guide_line, next_price_line)
-        left_edge = rect.get_left()
-        for m in overlay:
-            m.shift(-left_edge)
-        overlay.move_to([left_edge[0], bar_y, 0], aligned_edge=LEFT)
-        return overlay
-
-    emitter_overlay = create_rest_overlay(emitter_idx)
-    receiver_overlay = create_rest_overlay(receiver_idx)
-
+    emitter_overlay = _create_rest_overlay(self, emitter_idx)
+    receiver_overlay = _create_rest_overlay(self, receiver_idx)
     self.add(emitter_overlay, receiver_overlay)
 
     fade_group = VGroup(
         *self.bar_group,
         *[seat for group in self.seat_groups for seat in group],
         *[line_and_label for _, line_and_label in self.price_lines],
-        self.available_label,
-        self.available_count,
-        self.distributed_label,
+        self.seats_label,
         self.distributed_count,
     )
 
     self.play(fade_group.animate.set_opacity(0.2), run_time=1.5)
-    self.wait(0.5)
 
-    # Escalado horizontal común
+    # Escalado objetivo
     overlay_width = emitter_overlay.width
     overlay_height = emitter_overlay.height
-    scale = [
-        (safe_width * (1 - axis_percent)) / overlay_width,
-        (safe_width * axis_percent) / overlay_height,
-        0,
-    ]
+    scale_x = (safe_width * (1 - axis_percent)) / overlay_width
+    scale_y = (safe_width * axis_percent) / overlay_height
 
-    # Posiciones finales en el canvas cuadrado
     half_safe = safe_width / 2
     offset = safe_width * axis_percent / 2
 
     emitter_target_pos = [
         -half_safe + (safe_width * (1 - axis_percent)) / 2,
-        -offset,
+        -half_safe +offset,
         0,
     ]
 
@@ -100,14 +87,19 @@ def zoom_on_rests(self, emitter_idx=2, receiver_idx=1):
         0,
     ]
 
-    # Fase 1: Escalado proporcional y movimiento
+    # Fase 1: traslación + rotación receptor
     self.play(
-        emitter_overlay.animate.scale(scale).move_to(emitter_target_pos),
-        receiver_overlay.animate.scale(scale).move_to(receiver_target_pos),
-        receiver_overlay.animate.rotate(PI / 2),
-        fade_group.animate.set_opacity(0),
-        run_time=2.0,
+        emitter_overlay.animate.move_to(emitter_target_pos),
+        receiver_overlay.animate.rotate(PI / 2).move_to(receiver_target_pos),
+        run_time=1.0,
         rate_func=smooth,
     )
 
-    self.wait(0.5)
+    # Fase 2: escalado con ejes invertidos en receptor
+    self.play(
+        emitter_overlay.animate.scale([scale_x, scale_y, 1]),
+        receiver_overlay.animate.scale([scale_y, scale_x, 1]),  # ejes invertidos
+        fade_group.animate.set_opacity(0.0),
+        run_time=0.5,
+        rate_func=smooth,
+    )
