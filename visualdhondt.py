@@ -15,18 +15,27 @@ config.frame_height = 32
 config.background_color = None
 
 class VisualDHondtScene(VoiceoverScene):
+    from scene_00_is_vote_concentration_useful import is_vote_concentration_useful
+    from balance import balance
 
     def voiceover(self, **kwds):
         return super().voiceover(**dict(kwds, max_subcaption_len=30))
 
     def construct(self):
+        add_background(self)
         self.set_speech_service(GTTSService(lang="es", global_speed=1.4))
+
+        with self.voiceover(text=
+            "¿Es útil concentrar el voto en el partido más grande?"
+        ):
+            self.is_vote_concentration_useful()
+            self.intro_elements.animate.fade_out()
+            self.balance()
 
         with self.voiceover(text=
             "Esta es una forma muy visual de entender el reparto D'Hondt: "
             "Rebajar los votos que cuesta cada escaño hasta que se repartan todos. "
         ):
-            add_background(self)
             self.setup_data()
             self.setup_layout()
             self.setup_price_lines()
@@ -62,9 +71,9 @@ class VisualDHondtScene(VoiceoverScene):
             "Si movemos N votos y el emisor tiene menos restos perderá su último escaño. "
             "El receptor lo ganará si le faltan menos para llegar a P. "
             "Las áreas de pérdida y de ganancia neta son iguales para cualquier N. "
-            "Habrá oportunidad de voto estratégico si podemos predecir los restos. "
+            "Habrá oportunidad de voto estratégico cuando podamos predecir los restos. "
             "Pero no, el criterio no es votar al más grande. "
-            "Aún piensas que..."
+            "¿Aún piensas que..."
         ):
             pass
 
