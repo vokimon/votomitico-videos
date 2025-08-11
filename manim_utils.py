@@ -5,6 +5,8 @@ def overshoot(t, s=1.70158):
     t -= 1
     return t * t * ((s + 1) * t + s) + 1
 
+def reverse_overshoot(t, s=1.70158):
+    return 1 - overshoot(1 - t, s)
 
 def add_background(scene, colors=["#f85158", BLACK]):
     if config.transparent:
