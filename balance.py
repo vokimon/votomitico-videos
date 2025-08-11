@@ -1,5 +1,10 @@
 from manim import *
 import numpy as np
+from manim_utils import (
+    add_background,
+    overshoot,
+    reverse_overshoot,
+)
 
 # === Manim render config ===
 config.frame_rate = 30
@@ -8,14 +13,6 @@ config.pixel_height = 1920
 config.frame_width = 18
 config.frame_height = 32
 config.background_color = None
-
-# === Easing functions ===
-def overshoot(t, s=1.70158):
-    t -= 1
-    return t * t * ((s + 1) * t + s) + 1
-
-def reverse_overshoot(t, s=1.70158):
-    return 1 - overshoot(1 - t, s)
 
 # === Balance construction ===
 def create_balance(self):
@@ -71,40 +68,41 @@ def create_balance(self):
     self.get_left_tip = get_left_tip
     self.get_right_tip = get_right_tip
 
-    def trapezoid(center, color):
-        top_left = center + UP * plate_height / 2 + LEFT * plate_width_top / 2
-        top_right = center + UP * plate_height / 2 + RIGHT * plate_width_top / 2
-        bottom_right = center + DOWN * plate_height / 2 + RIGHT * plate_width_bottom / 2
-        bottom_left = center + DOWN * plate_height / 2 + LEFT * plate_width_bottom / 2
-        return Polygon(top_left, top_right, bottom_right, bottom_left,
-                       color=BLACK, fill_color=color, fill_opacity=0.6)
+    def make_plate(position, color):
+        return Polygon(
+            position + UP * plate_height / 2 + LEFT * plate_width_top / 2,
+            position + UP * plate_height / 2 + RIGHT * plate_width_top / 2,
+            position + DOWN * plate_height / 2 + RIGHT * plate_width_bottom / 2,
+            position + DOWN * plate_height / 2 + LEFT * plate_width_bottom / 2,
+            color=BLACK, fill_color=color, fill_opacity=0.6
+        )
 
-    self.left_plate = trapezoid(
+    self.left_plate = make_plate(
         self.get_left_tip(self.arm_angle) + DOWN * self.plate_offset, RED
     )
-    self.right_plate = trapezoid(
+    self.right_plate = make_plate(
         self.get_right_tip(self.arm_angle) + DOWN * self.plate_offset, GREEN
     )
 
     self.left_chain = Line(
-        start=self.get_left_tip(self.arm_angle),
-        end=self.left_plate.get_top(), color=GRAY)
+        self.get_left_tip(self.arm_angle),
+        self.left_plate.get_top(),
+        color=GRAY
+    )
     self.right_chain = Line(
-        start=self.get_right_tip(self.arm_angle),
-        end=self.right_plate.get_top(), color=GRAY)
+        self.get_right_tip(self.arm_angle),
+        self.right_plate.get_top(),
+        color=GRAY
+    )
 
-    self.weight_bad = Circle(
-        radius=0.014 * s, fill_opacity=1, color=RED
-    )
-    self.weight_good = Circle(
-        radius=0.022 * s, fill_opacity=1, color=GREEN
-    )
+    self.weight_bad = Circle(radius=0.014 * s, fill_opacity=1, color=RED)
+    self.weight_good = Circle(radius=0.022 * s, fill_opacity=1, color=GREEN)
 
     self.elements = VGroup(
         base_triangle, support, pivot,
-        self.left_chain, self.right_chain,
+        self.arm,
         self.left_plate, self.right_plate,
-        self.arm
+        self.left_chain, self.right_chain
     )
 
     def update_positions(mob, dt):
@@ -150,7 +148,7 @@ def rotate_arm_to(self, target_angle, duration):
 
 # === Animation steps ===
 def show_balance(self, duration=0.3):
-    self.add(self.elements, self.arm)
+    self.add(self.elements)
     self.wait(duration)
 
 def drop_bad_weight(self, duration=1.0):
@@ -159,10 +157,10 @@ def drop_bad_weight(self, duration=1.0):
     tilt_time = 0.4 * duration
 
     if self.weight_bad not in self.mobjects:
-        self.add(self.weight_bad)
-        self.weight_bad.move_to(self.left_plate.get_center() + UP * 0.022 * self.base_scale)
         self.weight_bad.scale(0.6)
         self.weight_bad.set_opacity(0)
+        self.add(self.weight_bad)
+        self.elements.add(self.weight_bad)
 
     self.play(
         self.weight_bad.animate.set_opacity(1).scale(2.0),
@@ -171,10 +169,9 @@ def drop_bad_weight(self, duration=1.0):
     )
     self.play(
         self.weight_bad.animate.scale(0.5),
-        rate_func=smooth,
         run_time=settle_time
     )
-    rotate_arm_to(self, self.left_tilt_angle, duration=tilt_time)
+    rotate_arm_to(self, self.left_tilt_angle, tilt_time)
 
 def drop_good_weight(self, duration=1.2):
     appear_time = 0.3 * duration
@@ -182,10 +179,10 @@ def drop_good_weight(self, duration=1.2):
     tilt_time = 0.6 * duration
 
     if self.weight_good not in self.mobjects:
-        self.add(self.weight_good)
-        self.weight_good.move_to(self.right_plate.get_center() + UP * 0.022 * self.base_scale)
         self.weight_good.scale(0.6)
         self.weight_good.set_opacity(0)
+        self.add(self.weight_good)
+        self.elements.add(self.weight_good)
 
     self.play(
         self.weight_good.animate.set_opacity(1).scale(2.0),
@@ -194,10 +191,9 @@ def drop_good_weight(self, duration=1.2):
     )
     self.play(
         self.weight_good.animate.scale(0.5),
-        rate_func=smooth,
         run_time=settle_time
     )
-    rotate_arm_to(self, self.right_tilt_angle, duration=tilt_time)
+    rotate_arm_to(self, self.right_tilt_angle, tilt_time)
 
 def remove_good_weight(self, duration=1.0):
     pop_time = 0.1 * duration
@@ -211,27 +207,33 @@ def remove_good_weight(self, duration=1.0):
     )
     self.play(
         self.weight_good.animate.set_opacity(0).scale(0),
-        rate_func=smooth,
         run_time=fade_time
     )
     self.remove(self.weight_good)
-    rotate_arm_to(self, self.left_tilt_angle, duration=tilt_time)
+    self.elements.remove(self.weight_good)
 
-def prepare_transition(self, duration=0.8):
-    self.play(
-        FadeOut(self.weight_bad),
-        FadeOut(self.arm),
-        FadeOut(self.elements),
-        run_time=duration
-    )
-    self.wait(0.3)
+    rotate_arm_to(self, self.left_tilt_angle, tilt_time)
+    self.arm.clear_updaters()
 
-# === Debug Scene ===
+# === Debug Scene with inline transition
 class DebugBalanceScene(Scene):
     def construct(self):
+        add_background(self)
         create_balance(self)
+
         show_balance(self)
         drop_bad_weight(self)
         drop_good_weight(self)
         remove_good_weight(self)
-        prepare_transition(self)
+
+        # Simulate next scene
+        next_scene_element = Text(text="THE END", color=BLUE, fill_opacity=0.5).scale(0.5).move_to(DOWN * 3)
+
+        self.play(
+            AnimationGroup(
+                FadeOut(self.elements),
+                FadeIn(next_scene_element),
+                lag_ratio=0.3,
+            )
+        )
+        self.wait(0.3)
