@@ -22,7 +22,7 @@ def is_vote_concentration_useful(self):
 
     self.intro_elements = VGroup(
         self.target_bar_final,
-        self.source_bar,
+        self.source_bar_cut,
         self.question_mark,
     )
 

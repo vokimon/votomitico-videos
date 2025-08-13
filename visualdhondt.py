@@ -16,25 +16,36 @@ config.background_color = None
 
 class VisualDHondtScene(VoiceoverScene):
     from scene_00_is_vote_concentration_useful import is_vote_concentration_useful
-    from balance import balance
+    from balance import balance_sequence
+    from full_seat_transfer import transfer_seat
+    from dhont_to_rest_graph import zoom_on_rests
+    from conclusions import conclusions
 
     def voiceover(self, **kwds):
-        return super().voiceover(**dict(kwds, max_subcaption_len=30))
+        return super().voiceover(**dict(kwds, max_subcaption_len=20))
 
     def construct(self):
         add_background(self)
         self.set_speech_service(GTTSService(lang="es", global_speed=1.4))
+        self.to_delete = VGroup()
 
         with self.voiceover(text=
             "¿Es útil concentrar el voto en el partido más grande?"
         ):
             self.is_vote_concentration_useful()
-            self.intro_elements.animate.fade_out()
-            self.balance()
 
         with self.voiceover(text=
-            "Esta es una forma muy visual de entender el reparto D'Hondt: "
-            "Rebajar los votos que cuesta cada escaño hasta que se repartan todos. "
+            "El voto útil plantea votar un partido que te gusta menos, "
+            "a cambio de la ventaja que da el sistema al votar al mayor. "
+            "¿Pero sabías que tal ventaja no existe?"
+        ):
+            self.play(FadeOut(self.intro_elements))
+            self.balance_sequence()
+            self.play(FadeOut(self.elements, duration=0.001))
+
+        with self.voiceover(text=
+            "Visualmente, el reparto D'Hondt consiste en "
+            "rebajar los votos que cuesta cada escaño, hasta que se repartan todos. "
         ):
             self.setup_data()
             self.setup_layout()
@@ -67,15 +78,19 @@ class VisualDHondtScene(VoiceoverScene):
             self.zoom_on_rests(emitter_idx=2, receiver_idx=1)
 
         with self.voiceover(text=
-            "...cuyo valor entre 0 y P desconocemos antes de la votación. "
-            "Si movemos N votos y el emisor tiene menos restos perderá su último escaño. "
-            "El receptor lo ganará si le faltan menos para llegar a P. "
-            "Las áreas de pérdida y de ganancia neta son iguales para cualquier N. "
+            "Trasvasando N votos el receptor gana un escaño si está en esta zona. "
+            "Pero el emisor lo perderá si no tiene tantos restos. "
+            "Las zonas de pérdida y de ganancia neta son iguales para todo N. "
+        ):
+            pass
+
+        with self.voiceover(text=
             "Habrá oportunidad de voto estratégico cuando podamos predecir los restos. "
             "Pero no, el criterio no es votar al más grande. "
             "¿Aún piensas que..."
         ):
-            pass
+            self.play(FadeOut(self.to_delete, duration=0.001))
+            self.conclusions()
 
     def setup_data(self):
         self.parties = [
@@ -199,7 +214,7 @@ class VisualDHondtScene(VoiceoverScene):
         return [counts.get(party, 0) for party in range(len(self.parties))], cutoff_price
 
     def animate_prices(self):
-        total_duration = 8.0
+        total_duration = 7.0
         move_fraction = 0.30
         seat_steps = list(range(self.total_seats + 1))
 
@@ -340,7 +355,5 @@ class VisualDHondtScene(VoiceoverScene):
 
         self.wait(1.0)
 
-    from full_seat_transfer import transfer_seat
-    from dhont_to_rest_graph import zoom_on_rests
 
 

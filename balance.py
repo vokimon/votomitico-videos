@@ -14,26 +14,28 @@ config.frame_width = 18
 config.frame_height = 32
 config.background_color = None
 
-# === Balance construction ===
 def create_balance(self):
     s = min(config.frame_width, config.frame_height)
     self.base_scale = s
     self.arm_angle = 0
 
-    # Dimensions
-    self.support_height = 0.2 * s
-    arm_length = 0.33 * s
-    arm_thickness = 0.014 * s
-    support_width = 0.015 * s
-    plate_height = 0.033 * s
-    plate_width_top = 0.088 * s
-    plate_width_bottom = 0.055 * s
-    self.plate_offset = 0.083 * s
-    base_triangle_height = 0.06 * s
-    base_triangle_width = 0.14 * s
+    # === SCALED DIMENSIONS (all doubled for larger rendering) ===
+    self.support_height = 0.4 * s
+    arm_length = 0.66 * s
+    arm_thickness = 0.028 * s
+    support_width = 0.03 * s
+    plate_height = 0.066 * s
+    plate_width_top = 0.176 * s
+    plate_width_bottom = 0.11 * s
+    self.plate_offset = 0.166 * s
+    base_triangle_height = 0.12 * s
+    base_triangle_width = 0.28 * s
 
     self.left_tilt_angle = 0.3
     self.right_tilt_angle = -0.4
+    
+    self.weight_bad_radius = 0.03 * s
+    self.weight_good_radius = 0.04 * s
 
     base_bottom = ORIGIN - UP * (base_triangle_height + self.support_height)
 
@@ -78,10 +80,10 @@ def create_balance(self):
         )
 
     self.left_plate = make_plate(
-        self.get_left_tip(self.arm_angle) + DOWN * self.plate_offset, RED
+        self.get_left_tip(self.arm_angle) + DOWN * self.plate_offset, GRAY
     )
     self.right_plate = make_plate(
-        self.get_right_tip(self.arm_angle) + DOWN * self.plate_offset, GREEN
+        self.get_right_tip(self.arm_angle) + DOWN * self.plate_offset, GRAY
     )
 
     self.left_chain = Line(
@@ -95,8 +97,8 @@ def create_balance(self):
         color=GRAY
     )
 
-    self.weight_bad = Circle(radius=0.014 * s, fill_opacity=1, color=RED)
-    self.weight_good = Circle(radius=0.022 * s, fill_opacity=1, color=GREEN)
+    self.weight_bad = Circle(radius=self.weight_bad_radius, fill_opacity=1, color=RED)
+    self.weight_good = Circle(radius=self.weight_good_radius, fill_opacity=1, color=GREEN)
 
     self.elements = VGroup(
         base_triangle, support, pivot,
@@ -128,6 +130,18 @@ def create_balance(self):
 
     self.arm.add_updater(update_positions)
 
+    vertical_shift = -self.elements.get_center()[1]
+
+    # Shift all static parts
+    self.elements.shift(UP * vertical_shift)
+
+    # Also shift pivot point vector
+    self.pivot_point += UP * vertical_shift
+
+    # Move arm to new pivot point (important for updaters)
+    self.arm.move_to(self.pivot_point)
+
+
 # === Arm rotation ===
 def rotate_arm_to(self, target_angle, duration):
     start_angle = self.arm_angle
@@ -155,20 +169,21 @@ def drop_bad_weight(self, duration=1.0):
     appear_time = 0.4 * duration
     settle_time = 0.2 * duration
     tilt_time = 0.4 * duration
+    first_scale = 0.6
+    bounce_scale = 1.5
 
-    if self.weight_bad not in self.mobjects:
-        self.weight_bad.scale(0.6)
-        self.weight_bad.set_opacity(0)
-        self.add(self.weight_bad)
-        self.elements.add(self.weight_bad)
+    self.weight_bad.scale(first_scale * self.weight_bad_radius / self.weight_bad.radius)  # ensure small start
+    self.weight_bad.set_opacity(0)
+    self.add(self.weight_bad)
+    self.elements.add(self.weight_bad)
 
     self.play(
-        self.weight_bad.animate.set_opacity(1).scale(2.0),
+        self.weight_bad.animate.set_opacity(1).scale(bounce_scale * self.weight_bad_radius / self.weight_bad.radius),
         rate_func=overshoot,
         run_time=appear_time
     )
     self.play(
-        self.weight_bad.animate.scale(0.5),
+        self.weight_bad.animate.scale(self.weight_bad_radius / self.weight_bad.radius),
         run_time=settle_time
     )
     rotate_arm_to(self, self.left_tilt_angle, tilt_time)
@@ -215,6 +230,17 @@ def remove_good_weight(self, duration=1.0):
     rotate_arm_to(self, self.left_tilt_angle, tilt_time)
     self.arm.clear_updaters()
 
+def balance_sequence(self):
+    create_balance(self)
+
+    show_balance(self)
+    self.wait(1)
+    drop_bad_weight(self)
+    self.wait(1)
+    drop_good_weight(self)
+    self.wait(1.5)
+    remove_good_weight(self)
+
 # === Debug Scene with inline transition
 class DebugBalanceScene(Scene):
     def construct(self):
@@ -227,7 +253,7 @@ class DebugBalanceScene(Scene):
         remove_good_weight(self)
 
         # Simulate next scene
-        next_scene_element = Text(text="THE END", color=BLUE, fill_opacity=0.5).scale(0.5).move_to(DOWN * 3)
+        next_scene_element = Text(text="THE END", color=BLUE, font_size=300, fill_opacity=0.5).scale(0.5).move_to(DOWN * 3)
 
         self.play(
             AnimationGroup(

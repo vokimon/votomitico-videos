@@ -50,7 +50,8 @@ def zoom_on_rests(self, emitter_idx=2, receiver_idx=1):
     safe_width = config.frame_width * (1 - 2 * xmargin_pct)
 
     canvas_side = safe_width
-    self.add(Rectangle(width=canvas_side, height=canvas_side).move_to([0, 0, 0]))
+    debug_margin = Rectangle(width=canvas_side, height=canvas_side).move_to([0, 0, 0])
+    self.add(debug_margin)
 
     emitter_overlay = _create_rest_overlay(self, emitter_idx)
     receiver_overlay = _create_rest_overlay(self, receiver_idx)
@@ -103,3 +104,9 @@ def zoom_on_rests(self, emitter_idx=2, receiver_idx=1):
         run_time=0.5,
         rate_func=smooth,
     )
+    self.to_delete[:] = [
+        emitter_overlay,
+        receiver_overlay,
+        debug_margin,
+    ]
+
