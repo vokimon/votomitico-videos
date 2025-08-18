@@ -24,7 +24,7 @@ def create_balance(self):
     arm_length = 0.66 * s
     arm_thickness = 0.028 * s
     support_width = 0.03 * s
-    plate_height = 0.066 * s
+    plate_height = 0.03 * s
     plate_width_top = 0.176 * s
     plate_width_bottom = 0.11 * s
     self.plate_offset = 0.166 * s
@@ -100,7 +100,7 @@ def create_balance(self):
     self.weight_bad = Circle(radius=self.weight_bad_radius, fill_opacity=1, color=RED)
     self.weight_good = Circle(radius=self.weight_good_radius, fill_opacity=1, color=GREEN)
 
-    self.elements = VGroup(
+    self.to_delete = VGroup(
         base_triangle, support, pivot,
         self.arm,
         self.left_plate, self.right_plate,
@@ -130,10 +130,10 @@ def create_balance(self):
 
     self.arm.add_updater(update_positions)
 
-    vertical_shift = -self.elements.get_center()[1]
+    vertical_shift = -self.to_delete.get_center()[1]
 
     # Shift all static parts
-    self.elements.shift(UP * vertical_shift)
+    self.to_delete.shift(UP * vertical_shift)
 
     # Also shift pivot point vector
     self.pivot_point += UP * vertical_shift
@@ -162,7 +162,7 @@ def rotate_arm_to(self, target_angle, duration):
 
 # === Animation steps ===
 def show_balance(self, duration=0.3):
-    self.add(self.elements)
+    self.add(self.to_delete)
     self.wait(duration)
 
 def drop_bad_weight(self, duration=1.0):
@@ -175,7 +175,7 @@ def drop_bad_weight(self, duration=1.0):
     self.weight_bad.scale(first_scale * self.weight_bad_radius / self.weight_bad.radius)  # ensure small start
     self.weight_bad.set_opacity(0)
     self.add(self.weight_bad)
-    self.elements.add(self.weight_bad)
+    self.to_delete.add(self.weight_bad)
 
     self.play(
         self.weight_bad.animate.set_opacity(1).scale(bounce_scale * self.weight_bad_radius / self.weight_bad.radius),
@@ -197,7 +197,7 @@ def drop_good_weight(self, duration=1.2):
         self.weight_good.scale(0.6)
         self.weight_good.set_opacity(0)
         self.add(self.weight_good)
-        self.elements.add(self.weight_good)
+        self.to_delete.add(self.weight_good)
 
     self.play(
         self.weight_good.animate.set_opacity(1).scale(2.0),
@@ -225,7 +225,7 @@ def remove_good_weight(self, duration=1.0):
         run_time=fade_time
     )
     self.remove(self.weight_good)
-    self.elements.remove(self.weight_good)
+    self.to_delete.remove(self.weight_good)
 
     rotate_arm_to(self, self.left_tilt_angle, tilt_time)
     self.arm.clear_updaters()
@@ -257,7 +257,7 @@ class DebugBalanceScene(Scene):
 
         self.play(
             AnimationGroup(
-                FadeOut(self.elements),
+                FadeOut(self.to_delete),
                 FadeIn(next_scene_element),
                 lag_ratio=0.3,
             )

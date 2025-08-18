@@ -20,7 +20,7 @@ def is_vote_concentration_useful(self):
     animate_target_compression(self)
     animate_question_mark(self)
 
-    self.intro_elements = VGroup(
+    self.to_delete = VGroup(
         self.target_bar_final,
         self.source_bar_cut,
         self.question_mark,
