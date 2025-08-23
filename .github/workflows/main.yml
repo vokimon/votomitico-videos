@@ -1,3 +1,8 @@
+name: Video Generation
+on:
+  push:
+    branches:
+      - master
 jobs:
   generate:
     runs-on: ubuntu-latest
