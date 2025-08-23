@@ -1,0 +1,19 @@
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Rendering Scenes
+        uses: manim-kindergarten/manim_action_renderer@master
+        id: renderer
+        with:
+          source_file: useful_vote.py
+          extra_packages:
+            manim-voiceover
+            numpy
+        args: "--high_quality"
+      - name: Save output as artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Videos
+          path: ${{ steps.renderer.outputs.video_path }}
