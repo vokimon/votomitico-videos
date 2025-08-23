@@ -14,11 +14,12 @@ jobs:
         with:
           source_file: useful_vote.py
           args: "--high_quality"
-          extra_packages:
+          extra_packages: |
             manim-voiceover
             numpy
-          extra_system_packages:
+          extra_system_packages: |
             cairo-dev
+            pango-dev
       - name: Save output as artifacts
         uses: actions/upload-artifact@v4
         with:
