@@ -30,7 +30,7 @@ def visual_dhondt(self, total_duration=7.0):
     setup_layout(self)
     setup_price_lines(self)
     setup_counters(self)
-    animate_prices(self, total_duration)
+    animate_prices(self, total_duration-1)
 
 def setup_data(self):
     self.parties = [
@@ -182,8 +182,6 @@ def animate_prices(self, total_duration = 7.0):
         next_deal, next_price = seats_up_to(self, next_step)
         price_move_duration = move_durations[step_idx]
 
-        print(step_idx, next_step, next_price, price_move_duration, next_deal)
-
         _animate_price_and_seats_move(self, current_deal, next_deal, next_price, price_move_duration)
         _add_new_seats_flash(self, current_deal, next_deal, next_price)
 
@@ -253,7 +251,7 @@ def _transform_new_seats_to_normal(self, current_deal, next_deal, price, duratio
     if animations and duration > 0:
         self.play(*animations, run_time=duration, rate_func=smooth)
 
-def highlight_rests_and_fraction(self):
+def highlight_rests_and_fraction(self, duration=3):
     party_index = 0
     votes = self.parties[party_index][1]
     color = self.parties[party_index][0]
@@ -267,11 +265,15 @@ def highlight_rests_and_fraction(self):
 
     bounce_anims = [Indicate(seat) for seat in seats]
 
+    wait_duration = 0.2
+    seats_duration = (duration - wait_duration) * 0.5
+    rests_duration = (duration - wait_duration) * 0.5
+
     self.play(
-        LaggedStart(*bounce_anims, lag_ratio=0.5, run_time=seats_won * 0.3)
+        LaggedStart(*bounce_anims, lag_ratio=0.5, run_time=seats_duration)
     )
 
-    self.wait(0.5)
+    self.wait(wait_duration)
     for party_index, (color, votes) in enumerate(self.parties):
 
         rests = votes % self.final_price
@@ -293,11 +295,8 @@ def highlight_rests_and_fraction(self):
         self.add(rest_rect)
 
         self.play(
-            Indicate(rest_rect, run_time=0.4)
+            Indicate(rest_rect, run_time=rests_duration/len(self.parties))
         )
         self.remove(rest_rect)
-
-    self.wait(1.0)
-
 
 

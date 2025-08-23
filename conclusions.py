@@ -67,6 +67,7 @@ def stamp_seal(self, text="mito", width=12, color=RED, stroke_width=18, duration
     return stamp
 
 def conclusions(self):
+    self.play(FadeOut(self.to_delete, duration=0.001))
     texts, animate = create_cascade_texts(
         cascade_lines,
         total_duration=4.0,  # <-- controla toda la animación

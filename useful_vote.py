@@ -18,7 +18,7 @@ class UsefulVoteScene(VoiceoverScene):
     from scene_00_is_vote_concentration_useful import is_vote_concentration_useful
     from balance import balance_sequence
     from full_seat_transfer import transfer_seat
-    from under_p_transfers import under_p_transfers, prepare_rest_plot_axes, draw_gain_zone, draw_loss_zone, rest_uncertainty
+    from under_p_transfers import under_p_transfers, prepare_rest_plot_axes, draw_gain_zone, draw_loss_zone, rest_uncertainty, remove_scenario_point
     from conclusions import conclusions
     from visualdhondt import visual_dhondt, highlight_rests_and_fraction
 
@@ -26,8 +26,9 @@ class UsefulVoteScene(VoiceoverScene):
         return super().voiceover(**dict(kwds, max_subcaption_len=20))
 
     def construct(self):
+        voice_speed = 1.4
         add_background(self)
-        self.set_speech_service(GTTSService(lang="es", global_speed=1.4))
+        self.set_speech_service(GTTSService(lang="es", global_speed=voice_speed))
         self.to_delete = VGroup()
 
         with self.voiceover(text=
@@ -44,35 +45,41 @@ class UsefulVoteScene(VoiceoverScene):
             self.balance_sequence()
 
         with self.voiceover(text=
-            "Visualmente, el reparto D'Hondt consiste en "
-            "rebajar los votos que cuesta cada escaño hasta que se reparten todos. "
-        ):
-            self.visual_dhondt(total_duration=5.0)
+            "El reparto D'Hondt equivale a "
+            "rebajar los votos que cuesta un escaño hasta que se reparten todos. "
+        ) as voiceover:
+            self.visual_dhondt(total_duration=voiceover.duration/voice_speed)
 
         with self.voiceover(text=
-            "Fijado este precio P, los votos suman escaño o bien quedan como restos. "
-        ):
-            self.highlight_rests_and_fraction()
+            "Fijado este precio los votos suman escaño o quedan como restos. "
+        ) as voiceover:
+            self.highlight_rests_and_fraction(voiceover.duration/voice_speed)
 
         with self.voiceover(text=
-            "Si transferimos bloques de P votos entre candidaturas afines "
+            "Si movemos entre candidaturas justo el precio del escaño "
+            #"Si transferimos bloques de P votos entre candidaturas afines "
             "lo que gana una lo pierde la otra. "
-            "Concentraríamos miles de votos sin beneficio conjunto. "
+            "Concentramos miles de votos sin beneficio conjunto. "
         ):
             for _ in range(2):
                 self.transfer_seat(2, 1, duration=0.8)
             for _ in range(5):
                 self.transfer_seat(1, 2, duration=0.8)
             for _ in range(3):
-                self.transfer_seat(2, 1, duration=0.5)
+                self.transfer_seat(2, 1, duration=0.4)
 
         with self.voiceover(text=
-            "En trasvases menores que P depende de los restos de ambas formaciones... "
+            "En trasvases menores que el precio depende de los restos de ambas formaciones. "
         ):
             self.prepare_rest_plot_axes(emitter_idx=2, receiver_idx=1)
 
         with self.voiceover(text=
-            "En un trasvase es de N votos el receptor llegará al escaño si sus restos andan cerca de P. "
+            "Cuyo valor solemos desconocer antes de la votación. "
+        ):
+            self.rest_uncertainty()
+
+        with self.voiceover(text=
+            "Si los restos del receptor están en esta zona un trasvase de N votos le vale un escaño. "
         ):
             self.draw_gain_zone()
             
@@ -90,13 +97,14 @@ class UsefulVoteScene(VoiceoverScene):
             "Y las zonas de pérdida y ganancia netas son iguales aunque cambie N. "
         ):
             self.rest_uncertainty()
+            self.remove_scenario_point()
+
 
         with self.voiceover(text=
-            "Habrá oportunidad de voto estratégico cuando podamos predecir los restos. "
-            "Pero no, el criterio tampoco será votar al más grande. "
+            "Veremos oportunidad de voto estratégico cuando podamos predecir los restos. "
+            "Pero importará quién está en una zona crítica y no su tamaño. "
             "¿Aún piensas que..."
         ):
-            self.play(FadeOut(self.to_delete, duration=0.001))
             self.conclusions()
 
 

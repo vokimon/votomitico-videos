@@ -1,5 +1,11 @@
 from manim import *
 
+def under_p_transfers(self, emitter_idx=2, receiver_idx=1):
+    prepare_rest_plot_axes(self, emitter_idx, receiver_idx)
+    draw_gain_zone(self)
+    draw_loss_zone(self)
+    rest_uncertainty(self)
+
 def _get_x(self, alpha):
     left = self.emitter_overlay.get_corner(LEFT + DOWN)
     right = self.emitter_overlay.get_corner(RIGHT + DOWN)
@@ -10,6 +16,11 @@ def _get_y(self, alpha):
     top = self.receiver_overlay.get_corner(UP + LEFT)
     return interpolate(bottom, top, alpha)[1]
 
+def get_mercury_x(self):
+    return self.emitter_overlay[1].width / self.emitter_overlay[0].width
+
+def get_mercury_y(self):
+    return self.receiver_overlay[1].height / self.receiver_overlay[0].height
 
 def _labeled_zone(self, x_min, x_max, y_min, y_max, color, text):
     x0 = _get_x(self, x_min)
@@ -37,6 +48,7 @@ def _animate_mercury_y_to(self, value):
     overlay = self.receiver_overlay
     max_height = overlay.height
     base = bar.get_bottom()
+
     return bar.animate.stretch_to_fit_height(max_height * value).move_to(base, aligned_edge=DOWN)
 
 def _animate_mercury_x_to(self, value):
@@ -44,7 +56,9 @@ def _animate_mercury_x_to(self, value):
     overlay = self.emitter_overlay
     max_width = overlay.width
     base = bar.get_left()
+
     return bar.animate.stretch_to_fit_width(max_width * value).move_to(base, aligned_edge=LEFT)
+
 
 def prepare_rest_plot_axes(self, emitter_idx=2, receiver_idx=1):
     axis_percent = 0.08
@@ -153,6 +167,7 @@ def prepare_rest_plot_axes(self, emitter_idx=2, receiver_idx=1):
 
     self.add(emitter_zero, emitter_full, receiver_zero, receiver_full)
     self.to_delete.add(emitter_zero, emitter_full, receiver_zero, receiver_full)
+    add_scenario_point(self)
 
 
 def draw_gain_zone(self, duration=4):
@@ -189,7 +204,6 @@ def draw_gain_zone(self, duration=4):
             FadeIn(brace),
             FadeIn(n_label),
             _animate_mercury_y_to(self, 1),
-            lag_ratio=0.0,
         ),
         run_time=initial_phase_time,
     )
@@ -197,13 +211,11 @@ def draw_gain_zone(self, duration=4):
 
     # Fase 2: oscilación (bajar a P-N, subir a mitad)
     self.play(
-        _animate_mercury_y_to(self, 1-N),
-        run_time=oscillation_time / 2
-    )
-
-    self.play(
-        _animate_mercury_y_to(self, 1-N/2),
-        run_time=oscillation_time / 2
+        Succession(
+            _animate_mercury_y_to(self, 1-N),
+            _animate_mercury_y_to(self, 1-N/2),
+        ),
+        run_time=oscillation_time,
     )
 
     # Fase 3: desaparición cota y aparición zona verde
@@ -230,8 +242,6 @@ def draw_gain_zone(self, duration=4):
 
     self.add(green_rect)
     self.to_delete.add(green_rect, self.receiver_crit)
-
-
 
 
 def _create_rest_overlay(self, party_index):
@@ -276,10 +286,44 @@ def _create_rest_overlay(self, party_index):
     return overlay
 
 
-def under_p_transfers(self, emitter_idx=2, receiver_idx=1):
-    prepare_rest_plot_axes(self, emitter_idx, receiver_idx)
-    draw_gain_zone(self)
-    draw_loss_zone(self)
+def add_scenario_point(self):
+
+    def point_position(self, x=None, y=None):
+        return [
+            _get_x(self, get_mercury_x(self) if x is None else x),
+            _get_y(self, get_mercury_y(self) if y is None else y),
+            0,
+        ]
+
+    def update_point(mob):
+        return mob.move_to(point_position(self))
+
+    def update_line_x(mob):
+        return mob.become(Line(point_position(self), point_position(self, y=0), color=BLUE))
+
+    def update_line_y(mob):
+        return mob.become(Line(point_position(self), point_position(self, x=1), color=BLUE))
+
+    self.line_x = Line(point_position(self), point_position(self, y=0), color=BLUE)
+    self.line_y = Line(point_position(self), point_position(self, x=1), color=BLUE)
+    self.point = Dot(radius=0.2, color=YELLOW).move_to(point_position(self))
+
+    self.point.add_updater(update_point)
+    self.line_x.add_updater(update_line_x)
+    self.line_y.add_updater(update_line_y)
+    self.add(self.point, self.line_x, self.line_y)
+    self.to_delete.add(self.point, self.line_x, self.line_y)
+
+def remove_scenario_point(self):
+    self.point.clear_updaters()
+    self.line_x.clear_updaters()
+    self.line_y.clear_updaters()
+    self.remove(self.point, self.line_x, self.line_y)
+    self.to_delete.remove(self.point, self.line_x, self.line_y)
+    del self.point
+    del self.line_x
+    del self.line_y
+
 
 def draw_loss_zone(self, duration=4):
     N = self.n_tracker.get_value()
@@ -321,14 +365,14 @@ def draw_loss_zone(self, duration=4):
         run_time=initial_phase_time,
     )
     self.add(brace, n_label)
+    self.to_delete.add(brace, n_label)
 
     self.play(
-        _animate_mercury_x_to(self, N),
-        run_time=oscillation_time / 2,
-    )
-    self.play(
-        _animate_mercury_x_to(self, N/2),
-        run_time=oscillation_time / 2,
+        Succession(
+            _animate_mercury_x_to(self, N),
+            _animate_mercury_x_to(self, N/2),
+        ),
+        run_time=oscillation_time,
     )
 
     # Fase 3: desaparición brace + aparición zona crítica roja
@@ -341,81 +385,52 @@ def draw_loss_zone(self, duration=4):
         color=RED,
         text="",
     )
-    red_rect = red_target.copy().stretch_to_fit_height(0, about_edge=DOWN)
+    self.red_rect = red_target.copy().stretch_to_fit_height(0, about_edge=DOWN)
 
     self.play(
         AnimationGroup(
             FadeOut(brace),
             FadeOut(n_label),
-            Transform(red_rect, red_target),
+            Transform(self.red_rect, red_target),
             lag_ratio=0.0,
         ),
         run_time=final_phase_time,
     )
 
-    self.add(red_rect)
-    self.to_delete.add(red_rect, self.emitter_crit)
+    self.add(self.red_rect)
+    self.to_delete.add(self.red_rect, self.emitter_crit)
 
-def rest_uncertainty(self, duration=5):
-    r_bar = self.receiver_overlay[1]
-    s_bar = self.emitter_overlay[1]
-
-    point = Dot(radius=0.07, color=YELLOW)
-
-    def update_point(mob):
-        r_height = r_bar.height / self.receiver_overlay.height
-        s_width = s_bar.width / self.emitter_overlay.width
-        x = _get_x(self, s_width)
-        y = _get_y(self, r_height)
-        mob.move_to([x, y, 0])
-        return mob
-
-    point.add_updater(update_point)
-    self.add(point)
-
-    # Fase 1: receptor sube, emisor baja
+def rest_uncertainty(self, duration=2):
     self.play(
-        AnimationGroup(
-            _animate_mercury_y_to(self, 1),
-            _animate_mercury_x_to(self, 0),
-            lag_ratio=0.0,
+        Succession(
+            AnimationGroup(
+                _animate_mercury_x_to(self, 0.3),
+                _animate_mercury_y_to(self, 0.8),
+            ),
+            AnimationGroup(
+                _animate_mercury_x_to(self, 0.7),
+                _animate_mercury_y_to(self, 0.5),
+            ),
+            AnimationGroup(
+                _animate_mercury_x_to(self, 0.2),
+                _animate_mercury_y_to(self, 0.3),
+            ),
+            AnimationGroup(
+                _animate_mercury_x_to(self, 0.8),
+                _animate_mercury_y_to(self, 0.9),
+            ),
         ),
-        run_time=duration * 0.5,
-        rate_func=there_and_back,
+        run_time=duration,
     )
 
-    # Fase 2: receptor baja, emisor sube
-    self.play(
-        AnimationGroup(
-            _animate_mercury_y_to(self, 0),
-            _animate_mercury_x_to(self, 1),
-            lag_ratio=0.0,
-        ),
-        run_time=duration * 0.5,
-        rate_func=there_and_back,
-    )
-
-    point.remove_updater(update_point)
-    self.remove(point)
 
 class DebugScene(Scene):
-    from visualdhondt import setup_data, setup_layout, setup_price_lines, setup_counters
-    from manim_utils import add_background
+    from visualdhondt import visual_dhondt, highlight_rests_and_fraction
+    from manim_utils import add_background, the_end
     def construct(self):
         self.add_background()
-        self.setup_data()
-        self.setup_layout()
-        self.setup_price_lines()
-        zoom_on_rests(self)
-
-        # Simulate next scene
-        next_scene_element = Text(text="THE END", color=BLUE, font_size=300, fill_opacity=0.5).scale(0.5).move_to(DOWN * 3)
-
-        self.play(
-            AnimationGroup(
-                FadeOut(self.to_delete),
-                FadeIn(next_scene_element),
-                lag_ratio=0.3,
-            )
-        )
-        self.wait(0.3)
+        self.to_delete = VGroup()
+        self.visual_dhondt()
+        self.highlight_rests_and_fraction()
+        under_p_transfers(self)
+        self.the_end()

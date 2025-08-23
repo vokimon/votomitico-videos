@@ -1,6 +1,5 @@
 from manim import *
 
-
 def overshoot(t, s=1.70158):
     t -= 1
     return t * t * ((s + 1) * t + s) + 1
@@ -34,3 +33,16 @@ def show_caption(scene, text):
 
     scene.add(caption_group)
 
+
+def the_end(scene):
+    """Emulates a next scene fading out elements of the previous one"""
+    label = Text(text="THE END", color=BLUE, font_size=300, fill_opacity=0.5).scale(0.5).move_to(DOWN * 3)
+
+    scene.play(
+        AnimationGroup(
+            FadeOut(scene.to_delete),
+            FadeIn(label),
+            lag_ratio=0.3,
+        )
+    )
+    scene.wait(0.3)
