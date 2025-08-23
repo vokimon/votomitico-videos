@@ -8,10 +8,10 @@ jobs:
         id: renderer
         with:
           source_file: useful_vote.py
+          args: "--high_quality"
           extra_packages:
             manim-voiceover
             numpy
-        args: "--high_quality"
       - name: Save output as artifacts
         uses: actions/upload-artifact@v2
         with:
