@@ -12,10 +12,11 @@ jobs:
         uses: manim-kindergarten/manim_action_renderer@master
         id: renderer
         with:
+          community_ver: true
           source_file: useful_vote.py
           args: "--high_quality"
           extra_system_packages: pango-dev
-          extra_packages: manim-voiceover numpy
+          extra_packages: manim-voiceover
       - name: Save output as artifacts
         uses: actions/upload-artifact@v4
         with:
