@@ -2,9 +2,11 @@ from manim import *
 
 def under_p_transfers(self, emitter_idx=2, receiver_idx=1):
     prepare_rest_plot_axes(self, emitter_idx, receiver_idx)
+    rest_uncertainty(self)
     draw_gain_zone(self)
     draw_loss_zone(self)
-    rest_uncertainty(self)
+    draw_results(self)
+    animate_n(self)
 
 def _get_x(self, alpha):
     left = self.emitter_overlay.get_corner(LEFT + DOWN)
@@ -165,83 +167,23 @@ def prepare_rest_plot_axes(self, emitter_idx=2, receiver_idx=1):
     self.emitter_crit = emitter_crit
     self.receiver_crit = receiver_crit
 
+    def emitter_crit_updater(mob):
+        N = self.n_tracker.get_value()
+        pos = mob.get_center()
+        pos[0] = _get_x(self, N)
+        mob.move_to(pos)
+    emitter_crit.add_updater(emitter_crit_updater)
+    def receiver_crit_updater(mob):
+        N = self.n_tracker.get_value()
+        pos = mob.get_center()
+        pos[1] = _get_y(self, 1-N)
+        mob.move_to(pos)
+    receiver_crit.add_updater(receiver_crit_updater)
+
     self.add(emitter_zero, emitter_full, receiver_zero, receiver_full)
     self.to_delete.add(emitter_zero, emitter_full, receiver_zero, receiver_full)
     add_scenario_point(self)
 
-
-def draw_gain_zone(self, duration=4):
-    N = self.n_tracker.get_value()
-
-    # Duraciones relativas (suman 1)
-    initial_phase_time = 0.25 * duration
-    oscillation_time = 0.15 * duration
-    final_phase_time = 0.6 * duration
-
-    # Coordenadas verticales (eje receptor vertical)
-    y_0 = _get_y(self, 0)
-    y_p = _get_y(self, 1)
-    y_p_n = _get_y(self, 1 - N)
-
-    # Barra original del receptor
-    old_mercury_bar = self.receiver_overlay[1]
-    base = old_mercury_bar.get_corner(DOWN)
-
-    # Cota vertical N
-    brace = BraceBetweenPoints(
-        [_get_x(self, 1), y_p_n, 0],
-        [_get_x(self, 1), y_p, 0],
-        direction=LEFT,
-        color=WHITE,
-        sharpness=0.3,
-    )
-    n_label = Text("N", font_size=80, color=WHITE).next_to(brace, LEFT, buff=0.15)
-
-    # Fase 1: aparición cota y subida
-    self.play(
-        AnimationGroup(
-            FadeIn(self.receiver_crit),
-            FadeIn(brace),
-            FadeIn(n_label),
-            _animate_mercury_y_to(self, 1),
-        ),
-        run_time=initial_phase_time,
-    )
-    self.add(brace, n_label)
-
-    # Fase 2: oscilación (bajar a P-N, subir a mitad)
-    self.play(
-        Succession(
-            _animate_mercury_y_to(self, 1-N),
-            _animate_mercury_y_to(self, 1-N/2),
-        ),
-        run_time=oscillation_time,
-    )
-
-    # Fase 3: desaparición cota y aparición zona verde
-    green_target, _ = _labeled_zone(
-        self,
-        x_min=0,
-        x_max=1,
-        y_min=1 - N,
-        y_max=1,
-        color=GREEN,
-        text="",
-    )
-    green_rect = green_target.copy().stretch_to_fit_width(0, about_edge=RIGHT)
-
-    self.play(
-        AnimationGroup(
-            FadeOut(brace),
-            FadeOut(n_label),
-            Transform(green_rect, green_target),
-            lag_ratio=0.0,
-        ),
-        run_time=final_phase_time,
-    )
-
-    self.add(green_rect)
-    self.to_delete.add(green_rect, self.receiver_crit)
 
 
 def _create_rest_overlay(self, party_index):
@@ -311,8 +253,8 @@ def add_scenario_point(self):
     self.point.add_updater(update_point)
     self.line_x.add_updater(update_line_x)
     self.line_y.add_updater(update_line_y)
-    self.add(self.point, self.line_x, self.line_y)
-    self.to_delete.add(self.point, self.line_x, self.line_y)
+    self.add(self.line_x, self.line_y, self.point)
+    self.to_delete.add(self.line_x, self.line_y, self.point)
 
 def remove_scenario_point(self):
     self.point.clear_updaters()
@@ -325,84 +267,189 @@ def remove_scenario_point(self):
     del self.line_y
 
 
-def draw_loss_zone(self, duration=4):
-    N = self.n_tracker.get_value()
+def draw_gain_zone(self, duration=2):
+    # Duraciones relativas
+    initial_phase_time = 0.6 * duration
+    oscillation_time = 0.4 * duration
 
-    # Fases temporales
-    initial_phase_time = 0.25 * duration
-    oscillation_time = 0.15 * duration
-    final_phase_time = 0.6 * duration
+    # Acceso dinámico al valor de N
+    def get_N():
+        return self.n_tracker.get_value()
 
-    # Coordenadas
-    x_0 = _get_x(self, 0)
-    x_n = _get_x(self, N)
-    y = _get_y(self, 0)
+    def draw_brace():
+        # Brace entre (1, 1-N) y (1, 1)
+        x = _get_x(self, 0)
+        return BraceBetweenPoints(
+            [x, _get_y(self, 1 - get_N()), 0],
+            [x, _get_y(self, 1), 0],
+            direction=LEFT,
+            color=WHITE,
+            sharpness=0.3,
+        )
+    # --- Elementos dinámicos ---
+    brace = draw_brace()
 
-    # Barra de "mercurio" horizontal (emisor)
-    mercury_bar = self.emitter_overlay[1]
-    base = mercury_bar.get_left()
+    # Actualizar brace en tiempo real
+    def brace_updater(mob):
+        mob.become(draw_brace())
+    brace.add_updater(brace_updater)
 
+    # Etiqueta N
+    label = Text("N", font_size=80, color=WHITE)
+    def label_updater(mob):
+        mob.next_to(brace, LEFT, buff=0.15)
+    label.add_updater(label_updater)
 
-    # Brace entre 0 y N
-    brace = BraceBetweenPoints(
-        [x_0, y, 0],
-        [x_n, y, 0],
-        direction=UP,
-        color=WHITE,
-        sharpness=0.3,
+    # Función para dibujar la zona, con tamaño dinámico
+    def draw_zone():
+        return _labeled_zone(
+            self,
+            x_min=0,
+            x_max=1,  # Ancho final
+            y_min=1 - get_N(),
+            y_max=1,
+            color=GREEN,
+            text="",
+        )[0]
+
+    zone_target = draw_zone()
+    zone = zone_target.copy().stretch_to_fit_width(0, about_edge=RIGHT)
+    self.add(zone)
+
+    # receiver_crit, pos en función de N
+    def receiver_crit_updater(mob):
+        N = get_N()
+        pos = mob.get_center()
+        pos[1] = _get_y(self, 1 - N)
+        mob.move_to(pos)
+    self.receiver_crit.add_updater(receiver_crit_updater)
+
+    # Animación de entrada: Crecer en X (de 0 a 1 en X)
+    self.play(
+        AnimationGroup(
+            FadeIn(self.receiver_crit),
+            FadeIn(brace),
+            FadeIn(label),
+            Transform(zone, zone_target),
+            _animate_mercury_y_to(self, 1),
+        ),
+        run_time=initial_phase_time,
     )
-    n_label = Text("N", font_size=80, color=WHITE).next_to(brace, UP, buff=0.15)
 
-    # Fase 1: aparición brace, crit y subida inicial 0 → N
+    # Actualización dinámica de la zona con N
+    def zone_updater(mob):
+        new_zone = draw_zone()
+        mob.become(new_zone)
+
+    zone.add_updater(zone_updater)
+
+    # Añadir a la escena y registrar para limpieza
+    self.add(brace, label, zone)
+    self.to_delete.add(brace, label, zone, self.receiver_crit)
+
+    # Fase 2: Crecimiento en Y, dependiendo de N
+    N = get_N()
+    self.play(
+        _animate_mercury_y_to(self, 1-N),  # Mover barra dependiendo de N
+        run_time=oscillation_time/2,
+    )
+    self.play(
+        _animate_mercury_y_to(self, 1-3*N/4),  # Oscilación hacia la mitad
+        run_time=oscillation_time/2,
+    )
+
+
+def draw_loss_zone(self, duration=2):
+    # Duraciones relativas
+    initial_phase_time = 0.6 * duration
+    oscillation_time = 0.4 * duration
+
+    # Acceso dinámico al valor de N
+    def get_N():
+        return self.n_tracker.get_value()
+
+    def draw_brace():
+        y = _get_y(self, 1)
+        return BraceBetweenPoints(
+            [_get_x(self, 0), y, 0],
+            [_get_x(self, get_N()), y, 0],
+            direction=UP,
+            color=WHITE,
+            sharpness=0.3,
+        )
+
+    brace = draw_brace()
+    # Updater del brace
+    def brace_updater(mob):
+        mob.become(draw_brace())
+    brace.add_updater(brace_updater)
+
+    # Etiqueta N
+    label = Text("N", font_size=80, color=WHITE)
+    def label_updater(mob):
+        mob.next_to(brace, UP, buff=0.15)
+    label.add_updater(label_updater)
+
+    # Zona roja: parte visible inicial
+    def draw_zone():
+        return _labeled_zone(
+            self,
+            x_min=0,
+            x_max=get_N(),
+            y_min=0,
+            y_max=1,
+            color=RED,
+            text="",
+        )[0]
+
+    zone_target = draw_zone()
+
+    # Crear zona para animación de entrada
+    zone = draw_zone()
+    zone.stretch_to_fit_height(0, about_edge=DOWN)  # Crece desde abajo
+
+    self.add(zone)
+
+    # emitter_crit: posición dinámica en función de N
+    def emitter_crit_updater(mob):
+        N = get_N()
+        pos = mob.get_center()
+        pos[0] = _get_x(self, N)
+        mob.move_to(pos)
+    self.emitter_crit.add_updater(emitter_crit_updater)
+
+    # Animación de entrada
     self.play(
         AnimationGroup(
             FadeIn(self.emitter_crit),
             FadeIn(brace),
-            FadeIn(n_label),
-            _animate_mercury_x_to(self, 0.01), # avoid 0, breaks later resizing
-            lag_ratio=0.0,
+            FadeIn(label),
+            Transform(zone, zone_target),  # Crecimiento vertical
+            _animate_mercury_x_to(self, 0.01),  # Evitar ancho cero total
         ),
         run_time=initial_phase_time,
     )
-    self.add(brace, n_label)
-    self.to_delete.add(brace, n_label)
 
+    def zone_updater(mob):
+        mob.become(draw_zone())
+    zone.add_updater(zone_updater)
+
+    self.add(brace, label, zone)
+    self.to_delete.add(brace, label, zone, self.emitter_crit)
+
+    N = get_N()
     self.play(
-        Succession(
-            _animate_mercury_x_to(self, N),
-            _animate_mercury_x_to(self, N/2),
-        ),
-        run_time=oscillation_time,
+        _animate_mercury_x_to(self, N),
+        run_time=oscillation_time / 2,
     )
-
-    # Fase 3: desaparición brace + aparición zona crítica roja
-    red_target, _ = _labeled_zone(
-        self,
-        x_min=0,
-        x_max=N,
-        y_min=0,
-        y_max=1,
-        color=RED,
-        text="",
-    )
-    self.red_rect = red_target.copy().stretch_to_fit_height(0, about_edge=DOWN)
-
     self.play(
-        AnimationGroup(
-            FadeOut(brace),
-            FadeOut(n_label),
-            Transform(self.red_rect, red_target),
-            lag_ratio=0.0,
-        ),
-        run_time=final_phase_time,
+        _animate_mercury_x_to(self, N / 2),
+        run_time=oscillation_time / 2,
     )
 
-    self.add(self.red_rect)
-    self.to_delete.add(self.red_rect, self.emitter_crit)
 
 def rest_uncertainty(self, duration=2):
-    self.play(
-        Succession(
+    self.play(Succession(
             AnimationGroup(
                 _animate_mercury_x_to(self, 0.3),
                 _animate_mercury_y_to(self, 0.8),
@@ -419,10 +466,51 @@ def rest_uncertainty(self, duration=2):
                 _animate_mercury_x_to(self, 0.8),
                 _animate_mercury_y_to(self, 0.9),
             ),
+            AnimationGroup(
+                _animate_mercury_x_to(self, 0.6),
+                _animate_mercury_y_to(self, 0.2),
+            ),
         ),
         run_time=duration,
     )
 
+def add_label(self, text, pos_function):
+    def center(N):
+        x, y = pos_function(N)
+        return [
+            _get_x(self, x),
+            _get_y(self, y),
+            0,
+        ]
+    def updater(mob):
+        N = self.n_tracker.get_value()
+        mob.move_to(center(N))
+
+    N = self.n_tracker.get_value()
+    label = Text(text)
+    label.add_updater(updater)
+    updater(label)
+    self.to_delete.add(label)
+    return label
+
+def draw_results(self):
+    self.result_zero = add_label(self, "0", lambda N: ((1+N)/2, (1-N)/2) )
+    self.result_plusminus = add_label(self, "+1 -1 = 0", lambda N: (N/2, 1-N/2) )
+    self.result_plus = add_label(self, "+1", lambda N: (N/2, (1-N)/2) )
+    self.result_minus = add_label(self, "-1", lambda N: ((1+N)/2, 1-N/2) )
+    self.play(
+        Succession(*[
+            FadeIn(self.result_zero),
+            FadeIn(self.result_plusminus),
+            FadeIn(self.result_plus),
+            FadeIn(self.result_minus),
+        ])
+    )
+
+def animate_n(self):
+    self.play(
+        self.n_tracker.animate.set_value(0.9)
+    )
 
 class DebugScene(Scene):
     from visualdhondt import visual_dhondt, highlight_rests_and_fraction

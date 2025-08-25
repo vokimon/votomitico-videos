@@ -70,7 +70,7 @@ def conclusions(self):
     self.play(FadeOut(self.to_delete, duration=0.001))
     texts, animate = create_cascade_texts(
         cascade_lines,
-        total_duration=4.0,  # <-- controla toda la animación
+        total_duration=4.0,
         spacing=3.0
     )
 

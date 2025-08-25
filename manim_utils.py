@@ -33,6 +33,14 @@ def show_caption(scene, text):
 
     scene.add(caption_group)
 
+def full_remove(self, mob):
+    mob.clear_trackers()
+    self.to_delete.remove(mob)
+    self.remove(mob)
+
+def clear_previous_scene(self):
+    for mob in self.to_remove:
+        full_remove(self, mob)
 
 def the_end(scene):
     """Emulates a next scene fading out elements of the previous one"""

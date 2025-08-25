@@ -18,7 +18,14 @@ class UsefulVoteScene(VoiceoverScene):
     from scene_00_is_vote_concentration_useful import is_vote_concentration_useful
     from balance import balance_sequence
     from full_seat_transfer import transfer_seat
-    from under_p_transfers import under_p_transfers, prepare_rest_plot_axes, draw_gain_zone, draw_loss_zone, rest_uncertainty, remove_scenario_point
+    from under_p_transfers import (
+        prepare_rest_plot_axes,
+        draw_gain_zone, draw_loss_zone,
+        rest_uncertainty,
+        remove_scenario_point,
+        draw_results,
+        animate_n,
+    )
     from conclusions import conclusions
     from visualdhondt import visual_dhondt, highlight_rests_and_fraction
 
@@ -91,12 +98,12 @@ class UsefulVoteScene(VoiceoverScene):
         with self.voiceover(text=
             "Si no podemos predecir los restos, cada resultado es tan probable como el área que ocupa. "
         ):
-            self.rest_uncertainty()
+            self.draw_results()
 
         with self.voiceover(text=
             "Y las zonas de pérdida y ganancia netas son iguales aunque cambie N. "
         ):
-            self.rest_uncertainty()
+            self.animate_n()
             self.remove_scenario_point()
 
 
