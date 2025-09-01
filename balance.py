@@ -37,9 +37,9 @@ def create_balance(self):
     self.weight_bad_radius = 0.03 * s
     self.weight_good_radius = 0.04 * s
 
-    base_bottom = ORIGIN - UP * (base_triangle_height + self.support_height)
+    base_bottom = DOWN * (base_triangle_height + self.support_height)
 
-    base_triangle = Polygon(
+    base = Polygon(
         LEFT * base_triangle_width / 2 + DOWN * base_triangle_height,
         RIGHT * base_triangle_width / 2 + DOWN * base_triangle_height,
         + RIGHT * support_width / 2,
@@ -51,7 +51,7 @@ def create_balance(self):
         height=self.support_height,
         width=support_width,
         color=GRAY, fill_color=GRAY, fill_opacity=1
-    ).next_to(base_triangle.get_top(), UP, buff=0)
+    ).next_to(base.get_top(), UP, buff=0)
 
     self.pivot_point = support.get_top()
     pivot = Dot(point=self.pivot_point, radius=0.005 * s, color=ORANGE)
@@ -71,20 +71,20 @@ def create_balance(self):
     self.get_left_tip = get_left_tip
     self.get_right_tip = get_right_tip
 
-    def make_plate(position, color):
+    def make_plate(position):
         return Polygon(
             position + UP * plate_height / 2 + LEFT * plate_width_top / 2,
             position + UP * plate_height / 2 + RIGHT * plate_width_top / 2,
             position + DOWN * plate_height / 2 + RIGHT * plate_width_bottom / 2,
             position + DOWN * plate_height / 2 + LEFT * plate_width_bottom / 2,
-            color=BLACK, fill_color=color, fill_opacity=0.6
+            color=GRAY, fill_color=GRAY, fill_opacity=1
         )
 
     self.left_plate = make_plate(
-        self.get_left_tip(self.arm_angle) + DOWN * self.plate_offset, GRAY
+        self.get_left_tip(self.arm_angle) + DOWN * self.plate_offset
     )
     self.right_plate = make_plate(
-        self.get_right_tip(self.arm_angle) + DOWN * self.plate_offset, GRAY
+        self.get_right_tip(self.arm_angle) + DOWN * self.plate_offset
     )
 
     self.left_chain = Line(
@@ -102,7 +102,7 @@ def create_balance(self):
     self.weight_good = Circle(radius=self.weight_good_radius, fill_opacity=1, color=GREEN)
 
     self.to_delete = VGroup(
-        base_triangle, support, pivot,
+        base, support, pivot,
         self.arm,
         self.left_plate, self.right_plate,
         self.left_chain, self.right_chain
