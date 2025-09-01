@@ -42,7 +42,8 @@ def create_balance(self):
     base_triangle = Polygon(
         LEFT * base_triangle_width / 2 + DOWN * base_triangle_height,
         RIGHT * base_triangle_width / 2 + DOWN * base_triangle_height,
-        ORIGIN,
+        + RIGHT * support_width / 2,
+        + LEFT * support_width / 2,
         color=GRAY, fill_color=GRAY, fill_opacity=1
     ).shift(base_bottom)
 
