@@ -15,6 +15,7 @@ config.frame_height = 32
 config.background_color = None
 
 def create_balance(self):
+    balance_color = GRAY
     s = min(config.frame_width, config.frame_height)
     self.base_scale = s
     self.arm_angle = 0
@@ -44,13 +45,13 @@ def create_balance(self):
         RIGHT * base_triangle_width / 2 + DOWN * base_triangle_height,
         + RIGHT * support_width / 2,
         + LEFT * support_width / 2,
-        color=GRAY, fill_color=GRAY, fill_opacity=1
+        color=balance_color, fill_color=balance_color, fill_opacity=1
     ).shift(base_bottom)
 
     support = Rectangle(
         height=self.support_height,
         width=support_width,
-        color=GRAY, fill_color=GRAY, fill_opacity=1
+        color=balance_color, fill_color=balance_color, fill_opacity=1
     ).next_to(base.get_top(), UP, buff=0)
 
     self.pivot_point = support.get_top()
@@ -59,7 +60,7 @@ def create_balance(self):
     self.arm = Rectangle(
         height=arm_thickness,
         width=arm_length,
-        color=GRAY, fill_color=GRAY, fill_opacity=1
+        color=balance_color, fill_color=balance_color, fill_opacity=1
     ).move_to(self.pivot_point)
 
     def get_left_tip(angle):
@@ -77,7 +78,7 @@ def create_balance(self):
             position + UP * plate_height / 2 + RIGHT * plate_width_top / 2,
             position + DOWN * plate_height / 2 + RIGHT * plate_width_bottom / 2,
             position + DOWN * plate_height / 2 + LEFT * plate_width_bottom / 2,
-            color=GRAY, fill_color=GRAY, fill_opacity=1
+            color=balance_color, fill_color=balance_color, fill_opacity=1
         )
 
     self.left_plate = make_plate(
@@ -90,12 +91,12 @@ def create_balance(self):
     self.left_chain = Line(
         self.get_left_tip(self.arm_angle),
         self.left_plate.get_top(),
-        color=GRAY
+        color=balance_color
     )
     self.right_chain = Line(
         self.get_right_tip(self.arm_angle),
         self.right_plate.get_top(),
-        color=GRAY
+        color=balance_color
     )
 
     self.weight_bad = Circle(radius=self.weight_bad_radius, fill_opacity=1, color=RED)
